@@ -70,29 +70,10 @@
     <main class="max-w-6xl mx-auto px-4 py-12">
       <section id="leaderboard" class="space-y-12">
         <!-- Leaderboard -->
-        <h2 class="text-4xl font-bold text-center mb-8">🏆 Gloves Leaderboard</h2>
+        <h2 class="text-4xl font-bold text-center mb-8">🏆 120$ Race</h2>
         <div id="leaderboard-content" class="bg-gray-900 bg-opacity-70 p-6 rounded-lg shadow-lg">
           <h3 class="text-2xl font-bold mb-4 text-yellow-400">Leaderboard</h3>
-          <p class="text-lg mb-8">Leaderboard contains <span class="text-yellow-400 font-semibold">Rain.gg</span> wager for giveaway period.</p>
-        </div>
-    
-        <!-- Zasady giveaway -->
-        <div class="bg-gray-900 bg-opacity-70 p-6 rounded-lg shadow-lg mt-12">
-          <h3 class="text-2xl font-bold mb-4 text-yellow-400">🎉 GIVEAWAY RULES – Start: 27.05.2025 🎉</h3>
-          <ul class="text-left space-y-4 text-lg">
-            <li><strong>Wager period:</strong> You must wager between 27.05.2025 and 03.06.2025.</li>
-            <li><strong>Code requirement:</strong> All wagers must be placed under my code on Rain.gg. (<a href="https://rain.gg/r/therosarz" target="_blank" class="text-blue-400 hover:text-blue-500 transition">Code: therosarz</a>)</li>
-            <li><strong>Tracking:</strong> I will count the difference in your total wager between 27.05 and 03.06 – so make sure to wager during that exact period!</li>
-            <li><strong>Ticket system:</strong> Every 10 coins wagered = 1 raffle ticket (e.g. 50 coins wagered = 5 tickets).</li>
-            <li><strong>Giveaway method:</strong> The draw will be done using <a href="https://wheelofnames.com/" target="_blank" class="text-blue-400 hover:text-blue-500 transition">wheelofnames.com</a>.</li>
-            <li><strong>Draw date:</strong> The raffle will be rolled live on stream on 3rd June 2025.</li>
-            <li><strong>Elimination style:</strong> It will be a Last Man Standing format – participants will be eliminated one by one until we have the final winner!</li>
-          </ul>
-        </div>
-    
-        <!-- Przykładowy roll -->
-        <div class="flex justify-center items-center mt-8">
-          <img src="roll.gif" alt="Example Roll" class="rounded-lg shadow-lg max-w-full">
+          <p class="text-lg mb-8">Leaderboard contains <span class="text-yellow-400 font-semibold">Rain.gg</span> wager for race period.</p>
         </div>
       </section>
     </main>
@@ -211,8 +192,8 @@
     async function fetchLeaderboard() {
       const API_KEY = "abfaa9ce-a12a-4fac-9c73-b0becd368481";
       const CODE = "therosarz"; // Twój kod afiliacyjny
-      const START_DATE = "2024-05-27T00:00:00.00Z";
-      const END_DATE = "2024-06-03T23:59:59.99Z";
+      const START_DATE = "2024-06-12T00:00:00.00Z";
+      const END_DATE = "2024-06-26T23:59:59.99Z";
       const TYPE = "wagered";
 
       const url = `https://api.rain.gg/affiliates/leaderboard?start_date=${START_DATE}&end_date=${END_DATE}&type=${TYPE}&code=${CODE}`;
