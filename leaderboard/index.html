@@ -192,16 +192,7 @@
       "retina_detect": true
     });
 
-    // Przykładowa stara tablica użytkowników
-    const oldUsers = [
-      { username: "user1", avatar: "", wagered: 12345 },
-      { username: "user2", avatar: "", wagered: 10000 },
-      { username: "user3", avatar: "", wagered: 9000 },
-      { username: "user4", avatar: "", wagered: 8000 },
-      { username: "user5", avatar: "", wagered: 7000 }
-    ];
-
-    function renderLeaderboard(users, containerId = "dynamic-leaderboard") {
+    function renderLeaderboard(users, containerId = "dynamic-leaderboard", showTickets = false) {
       if (!users || users.length === 0) {
         document.getElementById(containerId).innerHTML = `<div class="text-red-400 mt-4">No data.</div>`;
         return;
@@ -220,8 +211,8 @@
               <div class="text-4xl mb-2">${podiumIcons[1]}</div>
               <img src="${sorted[1].avatar || 'bot.png'}" class="w-14 h-14 rounded-full mb-2" alt="avatar">
               <div class="font-bold text-lg w-full text-center truncate">${sorted[1].username}</div>
-              <div class="text-green-500 font-semibold text-xl mt-1">${sorted[1].wagered} coins</div>
-              <div class="text-cyan-200 text-sm font-semibold">${Math.floor(sorted[1].wagered / 10)} tickets</div>
+              <div class="text-green-500 font-semibold text-xl mt-1">${sorted[1].wagered.toFixed(2)} coins</div>
+              ${showTickets ? `<div class="text-cyan-200 text-sm font-semibold">${Math.floor(sorted[1].wagered / 10)} tickets</div>` : ""}
             </div>
           ` : ''}
           ${sorted[0] ? `
@@ -229,8 +220,8 @@
               <div class="text-5xl mb-2">${podiumIcons[0]}</div>
               <img src="${sorted[0].avatar || 'bot.png'}" class="w-16 h-16 rounded-full mb-2" alt="avatar">
               <div class="font-bold text-xl w-full text-center truncate">${sorted[0].username}</div>
-              <div class="text-green-500 font-semibold text-2xl mt-1">${sorted[0].wagered} coins</div>
-              <div class="text-cyan-200 text-base font-semibold">${Math.floor(sorted[0].wagered / 10)} tickets</div>
+              <div class="text-green-500 font-semibold text-2xl mt-1">${sorted[0].wagered.toFixed(2)} coins</div>
+              ${showTickets ? `<div class="text-cyan-200 text-base font-semibold">${Math.floor(sorted[0].wagered / 10)} tickets</div>` : ""}
             </div>
           ` : ''}
           ${sorted[2] ? `
@@ -238,8 +229,8 @@
               <div class="text-4xl mb-2">${podiumIcons[2]}</div>
               <img src="${sorted[2].avatar || 'bot.png'}" class="w-12 h-12 rounded-full mb-2" alt="avatar">
               <div class="font-bold text-lg w-full text-center truncate">${sorted[2].username}</div>
-              <div class="text-green-500 font-semibold text-lg mt-1">${sorted[2].wagered} coins</div>
-              <div class="text-cyan-200 text-sm font-semibold">${Math.floor(sorted[2].wagered / 10)} tickets</div>
+              <div class="text-green-500 font-semibold text-lg mt-1">${sorted[2].wagered.toFixed(2)} coins</div>
+              ${showTickets ? `<div class="text-cyan-200 text-sm font-semibold">${Math.floor(sorted[2].wagered / 10)} tickets</div>` : ""}
             </div>
           ` : ''}
         </div>
@@ -252,7 +243,7 @@
                 <th class="py-2 px-4">#</th>
                 <th class="py-2 px-4">User</th>
                 <th class="py-2 px-4">Coins</th>
-                <th class="py-2 px-4">Tickets</th>
+                ${showTickets ? `<th class="py-2 px-4">Tickets</th>` : ""}
               </tr>
             </thead>
             <tbody>
@@ -265,8 +256,8 @@
               <img src="${user.avatar || 'bot.png'}" class="w-8 h-8 rounded-full" alt="avatar">
               <span class="truncate max-w-xs">${user.username}</span>
             </td>
-            <td class="py-2 px-4 text-green-400 font-semibold">${user.wagered}</td>
-            <td class="py-2 px-4 text-yellow-300">${Math.floor(user.wagered / 10)}</td>
+            <td class="py-2 px-4 text-green-400 font-semibold">${user.wagered.toFixed(2)}</td>
+            ${showTickets ? `<td class="py-2 px-4 text-yellow-300">${Math.floor(user.wagered / 10)}</td>` : ""}
           </tr>
         `;
       });
@@ -311,7 +302,7 @@
             const response = await fetch(url);
             if (!response.ok) throw new Error();
             const data = await response.json();
-            renderLeaderboard(data.results || []);
+            renderLeaderboard(data.results || [], "dynamic-leaderboard", true);
           } catch {
             document.getElementById("dynamic-leaderboard").innerHTML = `<div class="text-red-400 mt-4">Failed to load old leaderboard.</div>`;
           }
@@ -322,6 +313,22 @@
         }
       });
     });
+
+    async function fetchLeaderboard() {
+      const START_DATE = "2025-06-12T00:00:00.00Z";
+      const END_DATE = "2025-06-26T23:59:59.99Z";
+      const TYPE = "wagered";
+      const CODE = "therosarz";
+      const url = `/api/leaderboard?start_date=${START_DATE}&end_date=${END_DATE}&type=${TYPE}&code=${CODE}`;
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error();
+        const data = await response.json();
+        renderLeaderboard(data.results || [], "dynamic-leaderboard", false);
+      } catch {
+        document.getElementById("dynamic-leaderboard").innerHTML = `<div class="text-red-400 mt-4">Failed to load leaderboard.</div>`;
+      }
+    }
   </script>
 </body>
 </html>
