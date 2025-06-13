@@ -193,6 +193,7 @@
     });
 
     function renderLeaderboard(users, containerId = "dynamic-leaderboard", showTickets = false) {
+      const rewards = [50, 25, 20, 15, 10];
       if (!users || users.length === 0) {
         document.getElementById(containerId).innerHTML = `<div class="text-red-400 mt-4">No data.</div>`;
         return;
@@ -283,7 +284,7 @@
       try {
         const response = await fetch(url);
         const data = await response.json();
-        console.log("API response:", data); // Dodaj to!
+        console.log("API response:", data); 
         renderLeaderboard(data.results || [], "dynamic-leaderboard", showTickets);
       } catch (e) {
         document.getElementById("dynamic-leaderboard").innerHTML = `<div class="text-red-400 mt-4">Failed to load leaderboard.</div>`;
