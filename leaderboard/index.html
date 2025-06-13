@@ -74,6 +74,10 @@
         <div id="leaderboard-content" class="bg-gray-900 bg-opacity-70 p-6 rounded-lg shadow-lg">
           <h3 class="text-2xl font-bold mb-4 text-yellow-400">Leaderboard</h3>
           <p class="text-lg mb-8">Leaderboard contains <span class="text-yellow-400 font-semibold">Rain.gg</span> wager for race period.</p>
+          <button id="toggle-old-leaderboard" class="mb-6 px-4 py-2 bg-gray-800 text-yellow-400 rounded hover:bg-yellow-400 hover:text-gray-900 transition font-semibold">
+            Show old leaderboard
+          </button>
+          <div id="dynamic-leaderboard"></div>
         </div>
       </section>
     </main>
@@ -188,44 +192,29 @@
       "retina_detect": true
     });
 
-    // Leaderboard data
-    async function fetchLeaderboard() {
-      const API_KEY = "abfaa9ce-a12a-4fac-9c73-b0becd368481";
-      const CODE = "therosarz"; // Twój kod afiliacyjny
-      const START_DATE = "2024-06-12T00:00:00.00Z";
-      const END_DATE = "2024-06-26T23:59:59.99Z";
-      const TYPE = "wagered";
+    // Przykładowa stara tablica użytkowników
+    const oldUsers = [
+      { username: "user1", avatar: "", wagered: 12345 },
+      { username: "user2", avatar: "", wagered: 10000 },
+      { username: "user3", avatar: "", wagered: 9000 },
+      { username: "user4", avatar: "", wagered: 8000 },
+      { username: "user5", avatar: "", wagered: 7000 }
+    ];
 
-      const url = `https://api.rain.gg/affiliates/leaderboard?start_date=${START_DATE}&end_date=${END_DATE}&type=${TYPE}&code=${CODE}`;
-
-      const response = await fetch(url, {
-        headers: {
-          "Authorization": `Bearer ${API_KEY}`
-        }
-      });
-
-      if (!response.ok) {
-        document.getElementById("leaderboard-content").innerHTML += `<div class="text-red-400 mt-4">Failed to load leaderboard.</div>`;
+    function renderLeaderboard(users, containerId = "dynamic-leaderboard") {
+      if (!users || users.length === 0) {
+        document.getElementById(containerId).innerHTML = `<div class="text-red-400 mt-4">No data.</div>`;
         return;
       }
-
-      const data = await response.json();
-      const users = data.results || [];
-
-      // Sort users by wagered
       const sorted = users.slice().sort((a, b) => b.wagered - a.wagered);
-
-      // Podium (top 3)
       const podiumColors = [
         "bg-gradient-to-b from-yellow-400 to-yellow-600 text-yellow-900 border-yellow-400",
         "bg-gradient-to-b from-gray-300 to-gray-500 text-gray-900 border-gray-300",
         "bg-gradient-to-b from-orange-300 to-orange-500 text-orange-900 border-orange-300"
       ];
       const podiumIcons = ["🥇", "🥈", "🥉"];
-
       let podiumHTML = `
         <div class="flex flex-row justify-center items-end gap-4 mb-8">
-          <!-- 2 miejsce -->
           ${sorted[1] ? `
             <div class="flex flex-col items-center px-4 py-4 rounded-xl border-4 ${podiumColors[1]} shadow-lg w-40 mb-8 relative z-10">
               <div class="text-4xl mb-2">${podiumIcons[1]}</div>
@@ -235,7 +224,6 @@
               <div class="text-cyan-200 text-sm font-semibold">${Math.floor(sorted[1].wagered / 10)} tickets</div>
             </div>
           ` : ''}
-          <!-- 1 miejsce -->
           ${sorted[0] ? `
             <div class="flex flex-col items-center px-4 py-6 rounded-xl border-4 ${podiumColors[0]} shadow-2xl w-48 mb-0 relative z-20 scale-110">
               <div class="text-5xl mb-2">${podiumIcons[0]}</div>
@@ -245,7 +233,6 @@
               <div class="text-cyan-200 text-base font-semibold">${Math.floor(sorted[0].wagered / 10)} tickets</div>
             </div>
           ` : ''}
-          <!-- 3 miejsce -->
           ${sorted[2] ? `
             <div class="flex flex-col items-center px-4 py-3 rounded-xl border-4 ${podiumColors[2]} shadow-lg w-36 mb-12 relative z-0">
               <div class="text-4xl mb-2">${podiumIcons[2]}</div>
@@ -257,8 +244,6 @@
           ` : ''}
         </div>
       `;
-
-      // Pozostali użytkownicy (od 4 miejsca)
       let tableHTML = `
         <div class="overflow-x-auto">
           <table class="min-w-full text-left text-gray-200">
@@ -272,7 +257,6 @@
             </thead>
             <tbody>
       `;
-
       sorted.slice(3).forEach((user, i) => {
         tableHTML += `
           <tr class="bg-gray-800 bg-opacity-70 border-b border-gray-700">
@@ -291,11 +275,43 @@
           </table>
         </div>
       `;
-
-      document.getElementById("leaderboard-content").innerHTML += podiumHTML + tableHTML;
+      document.getElementById(containerId).innerHTML = podiumHTML + tableHTML;
     }
 
-    fetchLeaderboard();
+    async function fetchLeaderboard() {
+      const API_KEY = "abfaa9ce-a12a-4fac-9c73-b0becd368481";
+      const CODE = "therosarz";
+      const START_DATE = "2024-06-12T00:00:00.00Z";
+      const END_DATE = "2024-06-26T23:59:59.99Z";
+      const TYPE = "wagered";
+      const url = `https://api.rain.gg/affiliates/leaderboard?start_date=${START_DATE}&end_date=${END_DATE}&type=${TYPE}&code=${CODE}`;
+      try {
+        const response = await fetch(url, {
+          headers: { "Authorization": `Bearer ${API_KEY}` }
+        });
+        if (!response.ok) throw new Error();
+        const data = await response.json();
+        renderLeaderboard(data.results || []);
+      } catch {
+        document.getElementById("dynamic-leaderboard").innerHTML = `<div class="text-red-400 mt-4">Failed to load leaderboard.</div>`;
+      }
+    }
+
+    // Obsługa przycisku
+    let showingOld = false;
+    document.addEventListener("DOMContentLoaded", () => {
+      fetchLeaderboard();
+      document.getElementById("toggle-old-leaderboard").addEventListener("click", () => {
+        showingOld = !showingOld;
+        if (showingOld) {
+          renderLeaderboard(oldUsers);
+          document.getElementById("toggle-old-leaderboard").innerText = "Show current leaderboard";
+        } else {
+          fetchLeaderboard();
+          document.getElementById("toggle-old-leaderboard").innerText = "Show old leaderboard";
+        }
+      });
+    });
   </script>
 </body>
 </html>
