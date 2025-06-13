@@ -282,10 +282,10 @@
       const url = `/api/leaderboard?start_date=${START_DATE}&end_date=${END_DATE}&type=${TYPE}&code=${CODE}`;
       try {
         const response = await fetch(url);
-        if (!response.ok) throw new Error();
         const data = await response.json();
+        console.log("API response:", data); // Dodaj to!
         renderLeaderboard(data.results || [], "dynamic-leaderboard", showTickets);
-      } catch {
+      } catch (e) {
         document.getElementById("dynamic-leaderboard").innerHTML = `<div class="text-red-400 mt-4">Failed to load leaderboard.</div>`;
       }
     }
