@@ -274,9 +274,9 @@
       document.getElementById(containerId).innerHTML = podiumHTML + tableHTML;
     }
 
-    async function fetchLeaderboard() {
-      const START_DATE = "2025-06-12T00:00:00.00Z";
-      const END_DATE = "2025-06-26T23:59:59.99Z";
+    async function fetchLeaderboard(showTickets = false) {
+      const START_DATE = showTickets ? "2025-05-27T00:00:00.00Z" : "2025-06-12T00:00:00.00Z";
+      const END_DATE = showTickets ? "2025-06-03T23:59:59.99Z" : "2025-06-26T23:59:59.99Z";
       const TYPE = "wagered";
       const CODE = "therosarz";
       const url = `/api/leaderboard?start_date=${START_DATE}&end_date=${END_DATE}&type=${TYPE}&code=${CODE}`;
@@ -284,7 +284,7 @@
         const response = await fetch(url);
         if (!response.ok) throw new Error();
         const data = await response.json();
-        renderLeaderboard(data.results || []);
+        renderLeaderboard(data.results || [], "dynamic-leaderboard", showTickets);
       } catch {
         document.getElementById("dynamic-leaderboard").innerHTML = `<div class="text-red-400 mt-4">Failed to load leaderboard.</div>`;
       }
@@ -293,47 +293,18 @@
     // Obsługa przycisku
     let showingOld = false;
     document.addEventListener("DOMContentLoaded", () => {
-      fetchLeaderboard();
+      fetchLeaderboard(false);
       document.getElementById("toggle-old-leaderboard").addEventListener("click", async () => {
         showingOld = !showingOld;
         if (showingOld) {
-          // Pobierz stare dane z API dla starego okresu
-          const OLD_START_DATE = "2025-05-27T00:00:00.00Z";
-          const OLD_END_DATE = "2025-06-03T23:59:59.99Z";
-          const TYPE = "wagered";
-          const CODE = "therosarz";
-          const url = `/api/leaderboard?start_date=${OLD_START_DATE}&end_date=${OLD_END_DATE}&type=${TYPE}&code=${CODE}`;
-          try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error();
-            const data = await response.json();
-            renderLeaderboard(data.results || [], "dynamic-leaderboard", true);
-          } catch {
-            document.getElementById("dynamic-leaderboard").innerHTML = `<div class="text-red-400 mt-4">Failed to load old leaderboard.</div>`;
-          }
+          await fetchLeaderboard(true);
           document.getElementById("toggle-old-leaderboard").innerText = "Show current leaderboard";
         } else {
-          fetchLeaderboard();
+          await fetchLeaderboard(false);
           document.getElementById("toggle-old-leaderboard").innerText = "Show old leaderboard";
         }
       });
     });
-
-    async function fetchLeaderboard() {
-      const START_DATE = "2025-06-12T00:00:00.00Z";
-      const END_DATE = "2025-06-26T23:59:59.99Z";
-      const TYPE = "wagered";
-      const CODE = "therosarz";
-      const url = `/api/leaderboard?start_date=${START_DATE}&end_date=${END_DATE}&type=${TYPE}&code=${CODE}`;
-      try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error();
-        const data = await response.json();
-        renderLeaderboard(data.results || [], "dynamic-leaderboard", false);
-      } catch {
-        document.getElementById("dynamic-leaderboard").innerHTML = `<div class="text-red-400 mt-4">Failed to load leaderboard.</div>`;
-      }
-    }
   </script>
 </body>
 </html>
