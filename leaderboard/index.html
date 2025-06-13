@@ -213,12 +213,12 @@
               <div class="font-bold text-base text-center truncate">${sorted[1].username}</div>
               <div class="text-xs text-gray-400 mt-1">wagered</div>
               <div class="font-semibold text-white text-lg flex items-center justify-center gap-1">
-                <img src="coin.png" alt="coin" class="inline w-5 h-5" />
+                <img src="/leaderboard/coin.png" alt="coin" class="inline w-5 h-5" />
                 ${sorted[1].wagered.toFixed(2)}
               </div>
               <div class="text-xs text-gray-400 mt-1">reward</div>
               <div class="font-semibold text-yellow-300 text-base mb-1 flex items-center justify-center gap-1">
-                <img src="coin.png" alt="coin" class="inline w-5 h-5" />
+                <img src="/leaderboard/coin.png" alt="coin" class="inline w-5 h-5" />
                 ${rewards[1]?.toFixed(2) || '-'}
               </div>
               ${showTickets ? `<div class="mb-1 text-cyan-200 text-xs font-semibold">${Math.floor(sorted[1].wagered / 10)} tickets</div>` : ""}
@@ -231,13 +231,13 @@
               <div class="font-bold text-lg text-center truncate">${sorted[0].username}</div>
               <div class="text-xs text-gray-400 mt-1">wagered</div>
               <div class="font-semibold text-white text-lg flex items-center justify-center gap-1">
-                <img src="coin.png" alt="coin" class="inline w-5 h-5" />
+                <img src="/leaderboard/coin.png" alt="coin" class="inline w-5 h-5" />
                 ${sorted[1].wagered.toFixed(2)}
               </div>
               <div class="text-xs text-gray-400 mt-1">reward</div>
               <div class="font-semibold text-yellow-300 text-base mb-1 flex items-center justify-center gap-1">
-                <img src="coin.png" alt="coin" class="inline w-5 h-5" />
-                ${rewards[1]?.toFixed(2) || '-'}
+                <img src="/leaderboard/coin.png" alt="coin" class="inline w-5 h-5" />
+                ${rewards[0]?.toFixed(2) || '-'}
               </div>
               ${showTickets ? `<div class="mb-1 text-cyan-200 text-xs font-semibold">${Math.floor(sorted[0].wagered / 10)} tickets</div>` : ""}
             </div>
@@ -249,13 +249,13 @@
               <div class="font-bold text-base text-center truncate">${sorted[2].username}</div>
               <div class="text-xs text-gray-400 mt-1">wagered</div>
               <div class="font-semibold text-white text-lg flex items-center justify-center gap-1">
-                <img src="coin.png" alt="coin" class="inline w-5 h-5" />
+                <img src="/leaderboard/coin.png" alt="coin" class="inline w-5 h-5" />
                 ${sorted[1].wagered.toFixed(2)}
               </div>
               <div class="text-xs text-gray-400 mt-1">reward</div>
               <div class="font-semibold text-yellow-300 text-base mb-1 flex items-center justify-center gap-1">
-                <img src="coin.png" alt="coin" class="inline w-5 h-5" />
-                ${rewards[1]?.toFixed(2) || '-'}
+                <img src="/leaderboard/coin.png" alt="coin" class="inline w-5 h-5" />
+                ${rewards[2]?.toFixed(2) || '-'}
               </div>
               ${showTickets ? `<div class="mb-1 text-cyan-200 text-xs font-semibold">${Math.floor(sorted[2].wagered / 10)} tickets</div>` : ""}
             </div>
@@ -286,11 +286,11 @@
               <span class="truncate max-w-xs">${user.username}</span>
             </td>
             <td class="py-2 px-4 text-green-400 font-semibold flex items-center gap-1">
-              <img src="coin.png" alt="coin" class="inline w-5 h-5" />
+              <img src="/leaderboard/coin.png" alt="coin" class="inline w-5 h-5" />
               ${user.wagered.toFixed(2)}
             </td>
             <td class="py-2 px-4 text-yellow-300 font-semibold flex items-center gap-1">
-              ${rewards[i + 3] ? `<img src="coin.png" alt="coin" class="inline w-5 h-5" />${rewards[i + 3].toFixed(2)}` : '-'}
+              ${rewards[i + 3] ? `<img src="/leaderboard/coin.png" alt="coin" class="inline w-5 h-5" />${rewards[i + 3].toFixed(2)}` : '-'}
             </td>
             ${showTickets ? `<td class="py-2 px-4 text-yellow-300">${Math.floor(user.wagered / 10)}</td>` : ""}
           </tr>
