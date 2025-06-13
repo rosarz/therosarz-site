@@ -279,16 +279,13 @@
     }
 
     async function fetchLeaderboard() {
-      const API_KEY = "abfaa9ce-a12a-4fac-9c73-b0becd368481";
-      const CODE = "therosarz";
       const START_DATE = "2025-06-12T00:00:00.00Z";
       const END_DATE = "2025-06-26T23:59:59.99Z";
       const TYPE = "wagered";
-      const url = `https://api.rain.gg/v1/affiliates/leaderboard?start_date=${START_DATE}&end_date=${END_DATE}&type=${TYPE}&code=${CODE}`;
+      const CODE = "therosarz";
+      const url = `/api/leaderboard?start_date=${START_DATE}&end_date=${END_DATE}&type=${TYPE}&code=${CODE}`;
       try {
-        const response = await fetch(url, {
-          headers: { "Authorization": `Bearer ${API_KEY}` }
-        });
+        const response = await fetch(url);
         if (!response.ok) throw new Error();
         const data = await response.json();
         renderLeaderboard(data.results || []);
