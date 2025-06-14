@@ -277,30 +277,33 @@
             </thead>
             <tbody>
       `;
-      sorted.slice(3).forEach((user, i) => {
+
+      sorted.forEach((user, i) => {
         tableHTML += `
           <tr class="bg-gray-800 bg-opacity-70 border-b border-gray-700">
-            <td class="py-2 px-4 font-bold">${i + 4}</td>
-            <td class="py-2 px-4 flex items-center gap-2">
-              <img src="${user.avatar || 'bot.png'}" class="w-8 h-8 rounded-full" alt="avatar">
-              <span class="truncate max-w-xs">${user.username}</span>
+            <td class="py-2 px-4 font-bold">${i + 1}</td>
+            <td class="py-2 px-4">
+              <img src="${user.avatar || 'bot.png'}" class="w-8 h-8 rounded-full inline-block mr-2 align-middle" alt="avatar">
+              <span class="truncate max-w-xs align-middle">${user.username}</span>
             </td>
             <td class="py-2 px-4 text-green-400 font-semibold flex items-center gap-1">
               <img src="/leaderboard/coin.png" alt="coin" class="inline w-5 h-5" />
               ${user.wagered.toFixed(2)}
             </td>
             <td class="py-2 px-4 text-yellow-300 font-semibold flex items-center gap-1">
-              ${rewards[i + 3] ? `<img src="/leaderboard/coin.png" alt="coin" class="inline w-5 h-5" />${rewards[i + 3].toFixed(2)}` : '-'}
+              ${rewards[i] ? `<img src="/leaderboard/coin.png" alt="coin" class="inline w-5 h-5" />${rewards[i].toFixed(2)}` : '-'}
             </td>
             ${showTickets ? `<td class="py-2 px-4 text-yellow-300">${Math.floor(user.wagered / 10)}</td>` : ""}
           </tr>
         `;
       });
+
       tableHTML += `
             </tbody>
           </table>
         </div>
       `;
+
       document.getElementById(containerId).innerHTML = podiumHTML + tableHTML;
     }
 
