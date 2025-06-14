@@ -77,6 +77,9 @@
             <p class="text-lg mb-8 text-center">
               Wager under <span class="text-yellow-400 font-semibold">therosarz</span> code and participate <span class="text-yellow-400 font-semibold">in the leaderboard!</span>
             </p>
+            <p class="text-sm text-center text-gray-400 mb-8">
+              The leaderboard updates automatically every 15 minutes.
+            </p>
             <button id="toggle-old-leaderboard" class="mb-6 px-4 py-2 bg-gray-800 text-yellow-400 rounded hover:bg-yellow-400 hover:text-gray-900 transition font-semibold">
               Show old leaderboard
             </button>
@@ -328,7 +331,7 @@
       fetchLeaderboard(false);
       setInterval(() => {
         fetchLeaderboard(showingOld);
-      }, 900000); // 15 minut = 900 000 ms
+      }, 900000); // 15 min = 900 000 ms
       document.getElementById("toggle-old-leaderboard").addEventListener("click", async () => {
         showingOld = !showingOld;
         if (showingOld) {
