@@ -326,6 +326,9 @@
     let showingOld = false;
     document.addEventListener("DOMContentLoaded", () => {
       fetchLeaderboard(false);
+      setInterval(() => {
+        fetchLeaderboard(showingOld);
+      }, 900000); // 15 minut = 900 000 ms
       document.getElementById("toggle-old-leaderboard").addEventListener("click", async () => {
         showingOld = !showingOld;
         if (showingOld) {
