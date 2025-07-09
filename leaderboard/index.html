@@ -200,7 +200,7 @@
     });
 
     function renderLeaderboard(users, containerId = "dynamic-leaderboard", showTickets = false) {
-      const rewards = [50, 25, 20, 15, 10];
+      const rewards = [75, 35, 25, 15];
       if (!users || users.length === 0) {
         document.getElementById(containerId).innerHTML = `<div class="text-red-400 mt-4">No data.</div>`;
         return;
