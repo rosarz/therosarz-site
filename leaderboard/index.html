@@ -310,8 +310,8 @@
     }
 
     async function fetchLeaderboard(showTickets = false) {
-      const START_DATE = showTickets ? "2025-06-12T00:00:00.00Z" : "2025-07-09T00:00:00.00Z";
-      const END_DATE = showTickets ? "2025-06-26T00:00:00.00Z" : "2025-07-22T00:00:00.00Z";
+      const START_DATE = "2025-07-09T00:00:00.00Z";
+      const END_DATE = "2025-07-22T00:00:00.00Z";
       const TYPE = "wagered";
       const CODE = "therosarz";
       const url = `/api/leaderboard?start_date=${START_DATE}&end_date=${END_DATE}&type=${TYPE}&code=${CODE}`;
