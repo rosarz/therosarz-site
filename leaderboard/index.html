@@ -349,7 +349,7 @@
     let showingOld = false;
     document.addEventListener("DOMContentLoaded", () => {
       fetchLeaderboard(false);
-      startRaceTimer("2025-07-22T00:00:00.00Z"); // <-- data końca leaderboarda
+      startRaceTimer("2025-07-23T00:00:00.00Z"); // <-- data końca leaderboarda
       setInterval(() => {
         fetchLeaderboard(showingOld);
       }, 900000); // 15 min = 900 000 ms
