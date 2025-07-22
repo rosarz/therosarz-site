@@ -201,6 +201,9 @@
     });
 
     function startRaceTimer(endDateStr) {
+      function pad(n) {
+        return n < 10 ? '0' + n : n;
+      }
       function updateTimer() {
         const now = new Date();
         const endDate = new Date(endDateStr);
@@ -209,14 +212,15 @@
           document.getElementById("race-timer").textContent = "Leaderboard ended!";
           return;
         }
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-        const minutes = Math.floor((diff / (1000 * 60)) % 60);
+        const days = pad(Math.floor(diff / (1000 * 60 * 60 * 24)));
+        const hours = pad(Math.floor((diff / (1000 * 60 * 60)) % 24));
+        const minutes = pad(Math.floor((diff / (1000 * 60)) % 60));
+        const seconds = pad(Math.floor((diff / 1000) % 60));
         document.getElementById("race-timer").textContent =
-          `Time left: ${days}d ${hours}h ${minutes}m`;
+          `${days}:${hours}:${minutes}:${seconds}  Days:Hours:Minutes:Seconds`;
       }
       updateTimer();
-      setInterval(updateTimer, 60000); // aktualizuj co minutę
+      setInterval(updateTimer, 1000); // aktualizuj co sekundę
     }
 
     function renderLeaderboard(users, containerId = "dynamic-leaderboard", showTickets = false) {
@@ -349,10 +353,10 @@
     let showingOld = false;
     document.addEventListener("DOMContentLoaded", () => {
       fetchLeaderboard(false);
-      startRaceTimer("2025-07-23T00:00:00.00Z"); // <-- data końca leaderboarda
+      startRaceTimer("2025-07-23T00:00:00.00Z"); 
       setInterval(() => {
         fetchLeaderboard(showingOld);
-      }, 900000); // 15 min = 900 000 ms
+      }, 900000); // 15 minutes
       document.getElementById("toggle-old-leaderboard").addEventListener("click", async () => {
         showingOld = !showingOld;
         if (showingOld) {
