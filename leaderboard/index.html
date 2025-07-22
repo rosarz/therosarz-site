@@ -83,6 +83,7 @@
             <button id="toggle-old-leaderboard" class="mb-8 px-4 py-2 bg-gray-800 text-yellow-400 rounded hover:bg-yellow-400 hover:text-gray-900 transition font-semibold">
               Show old leaderboard
             </button>
+            <div id="race-timer" class="text-center text-lg text-yellow-400 font-bold mb-8"></div>
           </div>
           <div id="dynamic-leaderboard"></div>
         </div>
@@ -198,6 +199,25 @@
       },
       "retina_detect": true
     });
+
+    function startRaceTimer(endDateStr) {
+      function updateTimer() {
+        const now = new Date();
+        const endDate = new Date(endDateStr);
+        const diff = endDate - now;
+        if (diff <= 0) {
+          document.getElementById("race-timer").textContent = "Leaderboard ended!";
+          return;
+        }
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((diff / (1000 * 60)) % 60);
+        document.getElementById("race-timer").textContent =
+          `Time left: ${days}d ${hours}h ${minutes}m`;
+      }
+      updateTimer();
+      setInterval(updateTimer, 60000); // aktualizuj co minutę
+    }
 
     function renderLeaderboard(users, containerId = "dynamic-leaderboard", showTickets = false) {
       const rewards = [75, 35, 25, 15];
@@ -329,6 +349,7 @@
     let showingOld = false;
     document.addEventListener("DOMContentLoaded", () => {
       fetchLeaderboard(false);
+      startRaceTimer("2025-07-22T00:00:00.00Z"); // <-- data końca leaderboarda
       setInterval(() => {
         fetchLeaderboard(showingOld);
       }, 900000); // 15 min = 900 000 ms
