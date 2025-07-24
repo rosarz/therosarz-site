@@ -305,7 +305,12 @@
       `;
 
       sorted.forEach((user, i) => {
-        tableHTML += `
+          let nick = user.username || '';
+          let visible = nick.slice(0, 2);
+          let stars = '*'.repeat(Math.max(0, Math.min(8, nick.length) - 2));
+          let anonymized = (visible + stars).slice(0, 8);
+        
+          tableHTML += `
           <tr class="bg-gray-800 bg-opacity-70 border-b border-gray-700">
             <td class="py-2 px-4 font-bold">${i + 1}</td>
             <td class="py-2 px-4">
