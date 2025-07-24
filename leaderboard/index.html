@@ -70,7 +70,7 @@
     <main class="max-w-6xl mx-auto px-4 py-12">
       <section id="leaderboard" class="space-y-12">
         <!-- Leaderboard -->
-        <h2 class="text-4xl font-bold text-center mb-8">🏆 120 macaroonies Leaderboard</h2>
+        <h2 class="text-4xl font-bold text-center mb-8">🏆 450$ Leaderboard</h2>
         <div id="leaderboard-content" class="bg-gray-900 bg-opacity-70 p-6 rounded-lg shadow-lg">
           <div class="flex flex-col items-center">
             <h3 class="text-2xl font-bold mb-4 text-yellow-400">Leaderboard</h3>
@@ -334,8 +334,8 @@
     }
 
     async function fetchLeaderboard(showTickets = false) {
-      const START_DATE = "2025-07-09T00:00:00.00Z";
-      const END_DATE = "2025-07-22T00:00:00.00Z";
+      const START_DATE = "2025-07-24T00:00:00.00Z";
+      const END_DATE = "2025-07-30T00:00:00.00Z";
       const TYPE = "wagered";
       const CODE = "therosarz";
       const url = `/api/leaderboard?start_date=${START_DATE}&end_date=${END_DATE}&type=${TYPE}&code=${CODE}`;
@@ -353,7 +353,7 @@
     let showingOld = false;
     document.addEventListener("DOMContentLoaded", () => {
       fetchLeaderboard(false);
-      startRaceTimer("2025-07-23T00:00:00.00Z"); 
+      startRaceTimer("2025-07-29T00:00:00.00Z"); 
       setInterval(() => {
         fetchLeaderboard(showingOld);
       }, 900000); // 15 minutes
