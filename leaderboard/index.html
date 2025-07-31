@@ -224,7 +224,7 @@
     }
 
     function renderLeaderboard(users, containerId = "dynamic-leaderboard", showTickets = false) {
-      const rewards = [175, 125, 100, 50];
+      const rewards = [125, 75, 50, 30, 15, 5];
       if (!users || users.length === 0) {
         document.getElementById(containerId).innerHTML = `<div class="text-red-400 mt-4">No data.</div>`;
         return;
@@ -360,8 +360,8 @@
     }
 
     async function fetchLeaderboard(showTickets = false) {
-      const START_DATE = "2025-07-24T00:00:00.00Z";
-      const END_DATE = "2025-07-30T00:00:00.00Z";
+      const START_DATE = "2025-08-01T00:00:00.00Z";
+      const END_DATE = "2025-08-14T00:00:00.00Z";
       const TYPE = "wagered";
       const CODE = "therosarz";
       const url = `/api/leaderboard?start_date=${START_DATE}&end_date=${END_DATE}&type=${TYPE}&code=${CODE}`;
@@ -379,7 +379,7 @@
     let showingOld = false;
     document.addEventListener("DOMContentLoaded", () => {
       fetchLeaderboard(false);
-      startRaceTimer("2025-07-31T00:00:00.00Z"); 
+      startRaceTimer("2025-08-14T00:00:00.00Z"); 
       setInterval(() => {
         fetchLeaderboard(showingOld);
       }, 900000); // 15 minutes
