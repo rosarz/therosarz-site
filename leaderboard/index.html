@@ -28,29 +28,27 @@
       top: 0;
       left: 0;
       z-index: -1;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
-      animation: gradientShift 10s ease infinite;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 25%, #0f3460 50%, #0e1a2e 75%, #1a1a2e 100%);
+      animation: gradientShift 15s ease infinite;
     }
     
     @keyframes gradientShift {
-      0%, 100% { background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%); }
-      25% { background: linear-gradient(135deg, #f093fb 0%, #f5576c 25%, #4facfe 50%, #00d2ff 75%, #667eea 100%); }
-      50% { background: linear-gradient(135deg, #4facfe 0%, #00d2ff 25%, #667eea 50%, #764ba2 75%, #f093fb 100%); }
-      75% { background: linear-gradient(135deg, #00d2ff 0%, #667eea 25%, #764ba2 50%, #f093fb 75%, #f5576c 100%); }
+      0%, 100% { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 25%, #0f3460 50%, #0e1a2e 75%, #1a1a2e 100%); }
+      25% { background: linear-gradient(135deg, #16213e 0%, #0f3460 25%, #1a1a2e 50%, #2d1b69 75%, #16213e 100%); }
+      50% { background: linear-gradient(135deg, #0f3460 0%, #1a1a2e 25%, #2d1b69 50%, #16213e 75%, #0f3460 100%); }
+      75% { background: linear-gradient(135deg, #2d1b69 0%, #16213e 25%, #1a1a2e 50%, #0f3460 75%, #2d1b69 100%); }
     }
     .logo-link {
       display: flex;
       align-items: center;
       gap: 10px;
       transition: all 0.3s ease;
-      background: linear-gradient(45deg, #667eea, #764ba2);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      color: white;
     }
     .logo-link:hover {
       transform: scale(1.05);
       filter: drop-shadow(0 0 10px rgba(102, 126, 234, 0.5));
+      color: #ffd700;
     }
     .logo-img {
       width: 32px;
@@ -66,30 +64,29 @@
     /* Kolorowe efekty dla nawigacji */
     nav a:not(.logo-link) {
       position: relative;
-      background: linear-gradient(45deg, #f093fb, #f5576c);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      color: #e5e7eb;
       transition: all 0.3s ease;
     }
     
     nav a:not(.logo-link):hover {
       transform: translateY(-2px);
-      filter: drop-shadow(0 4px 8px rgba(240, 147, 251, 0.4));
+      color: #ffd700;
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
     }
     
     /* Kolorowe karty */
     .colorful-card {
-      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 50%, rgba(240, 147, 251, 0.1) 100%);
-      border: 1px solid rgba(102, 126, 234, 0.3);
+      background: linear-gradient(135deg, rgba(0, 0, 0, 0.7) 0%, rgba(26, 26, 46, 0.8) 50%, rgba(0, 0, 0, 0.7) 100%);
+      border: 1px solid rgba(102, 126, 234, 0.4);
       backdrop-filter: blur(10px);
       transition: all 0.3s ease;
+      color: white;
     }
     
     .colorful-card:hover {
       transform: translateY(-5px);
-      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-      border-color: rgba(240, 147, 251, 0.6);
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+      border-color: rgba(255, 215, 0, 0.6);
     }
     
     /* Kolorowe przyciski */
@@ -167,9 +164,27 @@
     
     /* Hover efekty dla całej tabeli */
     table tbody tr:hover {
-      background: linear-gradient(90deg, rgba(102, 126, 234, 0.1), rgba(240, 147, 251, 0.1));
+      background: linear-gradient(90deg, rgba(255, 215, 0, 0.1), rgba(102, 126, 234, 0.1));
       transform: scale(1.01);
       transition: all 0.3s ease;
+    }
+    
+    /* Lepszy kontrast dla tabeli */
+    table {
+      color: #f1f5f9;
+    }
+    
+    table thead {
+      background: linear-gradient(90deg, rgba(102, 126, 234, 0.8), rgba(75, 85, 200, 0.8)) !important;
+    }
+    
+    table tbody tr {
+      background: rgba(0, 0, 0, 0.4);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    table tbody tr:nth-child(even) {
+      background: rgba(26, 26, 46, 0.4);
     }
     
     /* Kolorowe ramki */
@@ -252,7 +267,7 @@
           }
         },
         "color": {
-          "value": "#3a86ff"
+          "value": ["#667eea", "#764ba2", "#f093fb", "#ffd700", "#4facfe"]
         },
         "shape": {
           "type": "circle",
@@ -287,8 +302,8 @@
         "line_linked": {
           "enable": true,
           "distance": 150,
-          "color": "#3a86ff",
-          "opacity": 0.2,
+          "color": "#667eea",
+          "opacity": 0.3,
           "width": 1
         },
         "move": {
