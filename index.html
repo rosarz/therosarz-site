@@ -1,6 +1,23 @@
 ﻿<!DOCTYPE html>
-<html lang="pl">
-<head>
+<html l    #particles-js {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      z-index: -1;
+      background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460, #0e1a2e);
+      background-size: 400% 400%;
+      animation: gradientShift 20s ease-in-out infinite;
+    }
+    
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      25% { background-position: 100% 50%; }
+      50% { background-position: 100% 100%; }
+      75% { background-position: 50% 100%; }
+      100% { background-position: 0% 50%; }
+    }
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>therosarz - Home</title>

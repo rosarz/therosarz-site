@@ -28,15 +28,17 @@
       top: 0;
       left: 0;
       z-index: -1;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 25%, #0f3460 50%, #0e1a2e 75%, #1a1a2e 100%);
-      animation: gradientShift 15s ease infinite;
+      background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460, #0e1a2e);
+      background-size: 400% 400%;
+      animation: gradientShift 20s ease-in-out infinite;
     }
     
     @keyframes gradientShift {
-      0%, 100% { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 25%, #0f3460 50%, #0e1a2e 75%, #1a1a2e 100%); }
-      25% { background: linear-gradient(135deg, #16213e 0%, #0f3460 25%, #1a1a2e 50%, #2d1b69 75%, #16213e 100%); }
-      50% { background: linear-gradient(135deg, #0f3460 0%, #1a1a2e 25%, #2d1b69 50%, #16213e 75%, #0f3460 100%); }
-      75% { background: linear-gradient(135deg, #2d1b69 0%, #16213e 25%, #1a1a2e 50%, #0f3460 75%, #2d1b69 100%); }
+      0% { background-position: 0% 50%; }
+      25% { background-position: 100% 50%; }
+      50% { background-position: 100% 100%; }
+      75% { background-position: 50% 100%; }
+      100% { background-position: 0% 50%; }
     }
     .logo-link {
       display: flex;
@@ -236,7 +238,7 @@
       <section id="leaderboard" class="space-y-12">
         <!-- Leaderboard -->
         <h2 class="text-4xl font-bold text-center mb-8 bg-gradient-to-r from-yellow-400 via-pink-500 to-blue-500 bg-clip-text text-transparent">🏆 300$ Leaderboard</h2>
-        <div id="leaderboard-content" class="colorful-card p-6 rounded-lg shadow-lg">
+        <div id="leaderboard-content" class="p-6">
           <div class="flex flex-col items-center">
             <h3 class="text-2xl font-bold mb-4 text-yellow-400">Leaderboard</h3>
             <p class="text-lg mb-8 text-center">
