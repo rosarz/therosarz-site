@@ -248,24 +248,8 @@
               <!-- Bonus Ladder -->
               <div class="mb-6 p-4 bg-black/40 rounded-lg border border-yellow-500/30">
                 <h4 class="text-base font-bold mb-3 text-green-400">🪜 BONUS LADDER</h4>
-                <div class="space-y-2 text-xs">
-                  <div class="flex justify-between items-center p-2 bg-gray-800/50 rounded">
-                    <span>500 coins</span>
-                    <span class="text-yellow-300 font-semibold">+5</span>
-                  </div>
-                  <div class="flex justify-between items-center p-2 bg-gray-800/50 rounded">
-                    <span>1,000 coins</span>
-                    <span class="text-yellow-300 font-semibold">+10</span>
-                  </div>
-                  <div class="flex justify-between items-center p-2 bg-gray-800/50 rounded">
-                    <span>2,000 coins</span>
-                    <span class="text-yellow-300 font-semibold">+20</span>
-                  </div>
-                  <div class="flex justify-between items-center p-2 bg-gray-800/50 rounded">
-                    <span>5,000 coins</span>
-                    <span class="text-yellow-300 font-semibold">+50</span>
-                  </div>
-                  <p class="text-xs text-gray-400 text-center mt-2">…and more!</p>
+                <div id="bonus-ladder-content" class="space-y-2 text-xs">
+                  <!-- Content will be populated by JavaScript -->
                 </div>
               </div>
 
@@ -445,6 +429,45 @@
       setInterval(updateTimer, 1000); // aktualizuj co sekundę
     }
 
+    function updateBonusLadder(users) {
+      const bonusLevels = [
+        { threshold: 500, bonus: 5, maxCount: 5 },
+        { threshold: 1000, bonus: 10, maxCount: 4 },
+        { threshold: 2000, bonus: 20, maxCount: 3 },
+        { threshold: 5000, bonus: 50, maxCount: 2 }
+      ];
+
+      let ladderHTML = '';
+      
+      bonusLevels.forEach(level => {
+        const qualifiedUsers = users.filter(user => user.wagered >= level.threshold);
+        const count = qualifiedUsers.length;
+        const usernames = qualifiedUsers.slice(0, level.maxCount).map(user => {
+          let nick = user.username || '';
+          let visible = nick.slice(0, 2);
+          let stars = '*'.repeat(Math.max(0, Math.min(6, nick.length) - 2));
+          return (visible + stars).slice(0, 6);
+        });
+
+        ladderHTML += `
+          <div class="p-2 bg-gray-800/50 rounded">
+            <div class="flex justify-between items-center mb-1">
+              <span>${level.threshold} coins</span>
+              <span class="text-yellow-300 font-semibold">+${level.bonus}</span>
+            </div>
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-cyan-300">${count}/${level.maxCount}</span>
+              <span class="text-gray-400">[${usernames.join(', ') || 'none'}]</span>
+            </div>
+          </div>
+        `;
+      });
+
+      ladderHTML += '<p class="text-xs text-gray-400 text-center mt-2">…and more!</p>';
+      
+      document.getElementById('bonus-ladder-content').innerHTML = ladderHTML;
+    }
+
     function renderLeaderboard(users, containerId = "dynamic-leaderboard", isOld = false) {
       const rewards = [125, 75, 50, 30, 15, 5];
       if (!users || users.length === 0) {
@@ -590,6 +613,9 @@
       `;
 
       document.getElementById(containerId).innerHTML = leaderboardTitle + podiumHTML + tableHTML;
+      
+      // Update bonus ladder with current users data
+      updateBonusLadder(sorted);
     }
 
     async function fetchLeaderboard() {
