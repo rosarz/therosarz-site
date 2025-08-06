@@ -390,12 +390,18 @@
       setInterval(updateTimer, 1000); // aktualizuj co sekundę
     }
 
-    function renderLeaderboard(users, containerId = "dynamic-leaderboard", showTickets = false) {
+    function renderLeaderboard(users, containerId = "dynamic-leaderboard", showTickets = false, isOld = false) {
       const rewards = [125, 75, 50, 30, 15, 5];
       if (!users || users.length === 0) {
         document.getElementById(containerId).innerHTML = `<div class="text-red-400 mt-4">No data.</div>`;
         return;
       }
+      
+      // Dodaj nagłówek wskazujący typ leaderboard
+      const leaderboardTitle = isOld ? 
+        `<div class="text-center mb-8"><h4 class="text-xl font-bold text-orange-400">📋 Previous Leaderboard (July 2025)</h4><p class="text-sm text-gray-400">Historical data with tickets</p></div>` :
+        `<div class="text-center mb-8"><h4 class="text-xl font-bold text-green-400">⚡ Current Leaderboard (August 2025)</h4><p class="text-sm text-gray-400">Live data - updates every 15 minutes</p></div>`;
+      
       const sorted = users.slice().sort((a, b) => b.wagered - a.wagered);
       const podiumIcons = ["🥈", "🥇", "🥉"];
       let podiumHTML = `
@@ -533,7 +539,7 @@
         </div>
       `;
 
-      document.getElementById(containerId).innerHTML = podiumHTML + tableHTML;
+      document.getElementById(containerId).innerHTML = leaderboardTitle + podiumHTML + tableHTML;
     }
 
     async function fetchLeaderboard(showTickets = false) {
@@ -546,9 +552,26 @@
         const response = await fetch(url);
         const data = await response.json();
         console.log("API response:", data); 
-        renderLeaderboard(data.results || [], "dynamic-leaderboard", showTickets);
+        renderLeaderboard(data.results || [], "dynamic-leaderboard", showTickets, false);
       } catch (e) {
         document.getElementById("dynamic-leaderboard").innerHTML = `<div class="text-red-400 mt-4">Failed to load leaderboard.</div>`;
+      }
+    }
+
+    async function fetchPreviousLeaderboard(showTickets = true) {
+      // Poprzedni leaderboard - lipiec 2025
+      const PREV_START_DATE = "2025-07-01T00:00:00.00Z";
+      const PREV_END_DATE = "2025-07-31T23:59:59.99Z";
+      const TYPE = "wagered";
+      const CODE = "therosarz";
+      const url = `/api/leaderboard?start_date=${PREV_START_DATE}&end_date=${PREV_END_DATE}&type=${TYPE}&code=${CODE}`;
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        console.log("Previous leaderboard API response:", data);
+        renderLeaderboard(data.results || [], "dynamic-leaderboard", showTickets, true);
+      } catch (e) {
+        document.getElementById("dynamic-leaderboard").innerHTML = `<div class="text-red-400 mt-4">Failed to load previous leaderboard.</div>`;
       }
     }
 
@@ -558,16 +581,23 @@
       fetchLeaderboard(false);
       startRaceTimer("2025-08-15T00:00:00.00Z"); 
       setInterval(() => {
-        fetchLeaderboard(showingOld);
-      }, 900000); // 15 minutes
+        if (!showingOld) {
+          fetchLeaderboard(false);
+        }
+      }, 900000); // 15 minutes - tylko dla aktualnego leaderboard
+      
       document.getElementById("toggle-old-leaderboard").addEventListener("click", async () => {
         showingOld = !showingOld;
         if (showingOld) {
-          await fetchLeaderboard(true);
+          await fetchPreviousLeaderboard(true);
           document.getElementById("toggle-old-leaderboard").innerText = "Show current leaderboard";
+          document.getElementById("toggle-old-leaderboard").classList.add("bg-yellow-600");
+          document.getElementById("toggle-old-leaderboard").classList.remove("gradient-button");
         } else {
           await fetchLeaderboard(false);
           document.getElementById("toggle-old-leaderboard").innerText = "Show old leaderboard";
+          document.getElementById("toggle-old-leaderboard").classList.remove("bg-yellow-600");
+          document.getElementById("toggle-old-leaderboard").classList.add("gradient-button");
         }
       });
     });
