@@ -6,8 +6,10 @@
   <title>Therosarz - YouTube</title>
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,700&display=swap" rel="stylesheet">
   <style>
     body {
+      font-family: 'Satoshi', 'Inter', Arial, sans-serif;
       overflow-x: hidden;
       display: flex;
       flex-direction: column;
@@ -29,7 +31,17 @@
       top: 0;
       left: 0;
       z-index: -1;
-      background: linear-gradient(to bottom, #0f0c29, #1a1a2e, #16213e);
+      background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460, #0e1a2e);
+      background-size: 400% 400%;
+      animation: gradientShift 20s ease-in-out infinite;
+    }
+    
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      25% { background-position: 100% 50%; }
+      50% { background-position: 100% 100%; }
+      75% { background-position: 50% 100%; }
+      100% { background-position: 0% 50%; }
     }
     
     .logo-link {
@@ -37,16 +49,106 @@
       align-items: center;
       gap: 10px;
       transition: all 0.3s ease;
+      color: white;
     }
     
     .logo-link:hover {
       transform: scale(1.05);
+      filter: drop-shadow(0 0 10px rgba(102, 126, 234, 0.5));
+      color: #ffd700;
     }
     
     .logo-img {
       width: 32px;
       height: 32px;
       border-radius: 50%;
+      box-shadow: 0 0 15px rgba(118, 75, 162, 0.6);
+      transition: all 0.3s ease;
+    }
+    
+    .logo-img:hover {
+      box-shadow: 0 0 25px rgba(118, 75, 162, 0.8);
+    }
+
+    /* Kolorowe efekty dla nawigacji */
+    nav a:not(.logo-link) {
+      position: relative;
+      color: #e5e7eb;
+      transition: all 0.3s ease;
+    }
+    
+    nav a:not(.logo-link):hover {
+      transform: translateY(-2px);
+      color: #ffd700;
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    }
+    
+    /* Kolorowe karty */
+    .colorful-card {
+      background: linear-gradient(135deg, rgba(0, 0, 0, 0.7) 0%, rgba(26, 26, 46, 0.8) 50%, rgba(0, 0, 0, 0.7) 100%);
+      border: 1px solid rgba(102, 126, 234, 0.4);
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+      color: white;
+    }
+    
+    .colorful-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+      border-color: rgba(255, 215, 0, 0.6);
+    }
+    
+    /* Kolorowe przyciski */
+    .gradient-button {
+      background: linear-gradient(45deg, #667eea, #764ba2, #f093fb);
+      background-size: 200% 200%;
+      animation: gradientMove 3s ease infinite;
+      border: none;
+      transition: all 0.3s ease;
+    }
+    
+    .gradient-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    @keyframes gradientMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    /* Dodatkowe efekty kolorowe */
+    .pulsing-glow {
+      animation: pulsingGlow 2s ease-in-out infinite alternate;
+    }
+    
+    @keyframes pulsingGlow {
+      from { box-shadow: 0 0 10px rgba(102, 126, 234, 0.3); }
+      to { box-shadow: 0 0 20px rgba(102, 126, 234, 0.8), 0 0 30px rgba(240, 147, 251, 0.4); }
+    }
+    
+    /* Kolorowe efekty dla tytułów */
+    .rainbow-text {
+      background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57, #ff9ff3);
+      background-size: 300% 300%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: rainbowMove 4s ease infinite;
+    }
+    
+    @keyframes rainbowMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    /* Kolorowe ramki */
+    .neon-border {
+      border: 2px solid transparent;
+      background: linear-gradient(45deg, #667eea, #764ba2) border-box;
+      border-radius: 12px;
     }
 
     iframe {
@@ -79,7 +181,7 @@
 
     <!-- Główna zawartość -->
     <main class="max-w-6xl mx-auto px-4 py-12">
-      <h2 class="text-4xl font-bold mb-8 text-center">📺 Latest Videos</h2>
+      <h2 class="text-4xl font-bold mb-8 text-center bg-gradient-to-r from-yellow-400 via-pink-500 to-blue-500 bg-clip-text text-transparent">📺 Latest Videos</h2>
       <div id="featured-video" class="mb-12"></div>
       <div id="latest-videos" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
     </main>
@@ -89,12 +191,12 @@
   <footer class="bg-black bg-opacity-70 text-sm text-center py-6 mt-10 px-4 leading-relaxed">
     <p class="mb-2">🎲 Do not get it twisted, do not gamble. Do not start gambling. Gambling is entertainment and entertainment only. You won't break even, you won't win.</p>
     <p class="mb-2">I am not responsible for any losses on casinos linked or promoted on this site.</p>
-    <p>Made by therosarz</p>
+    <p class="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-semibold">Made by therosarz</p>
     <p class="mt-4">
-      <p>Socials</p>
-      <a href="https://x.com/therosarz" target="_blank" class="text-blue-400 hover:text-blue-500 transition">X</a> |
-      <a href="https://kick.com/therosarz" target="_blank" class="text-green-400 hover:text-green-500 transition">Kick</a> |
-      <a href="https://discord.gg/CW2X5Km8cj" target="_blank" class="text-purple-400 hover:text-purple-500 transition">Discord</a>
+      <p class="text-cyan-300 font-semibold mb-2">Socials</p>
+      <a href="https://x.com/therosarz" target="_blank" class="text-blue-400 hover:text-blue-300 transition">X</a> |
+      <a href="https://kick.com/therosarz" target="_blank" class="text-green-400 hover:text-green-300 transition">Kick</a> |
+      <a href="https://discord.gg/CW2X5Km8cj" target="_blank" class="text-purple-400 hover:text-purple-300 transition">Discord</a>
     </p>
   </footer>
 
@@ -112,7 +214,7 @@
           }
         },
         "color": {
-          "value": "#3a86ff"
+          "value": ["#667eea", "#764ba2", "#f093fb", "#ffd700", "#4facfe"]
         },
         "shape": {
           "type": "circle",
@@ -147,8 +249,8 @@
         "line_linked": {
           "enable": true,
           "distance": 150,
-          "color": "#3a86ff",
-          "opacity": 0.2,
+          "color": "#667eea",
+          "opacity": 0.3,
           "width": 1
         },
         "move": {
@@ -227,7 +329,7 @@
         }
 
         const videoHTML = `
-          <div class="bg-gray-800 p-4 rounded-lg">
+          <div class="colorful-card p-4 rounded-lg">
             <iframe src="https://www.youtube.com/embed/${item.id.videoId}" allowfullscreen></iframe>
             <p class="text-sm text-gray-300 mt-2">Views: ${views}</p>
           </div>
@@ -235,7 +337,7 @@
 
         if (isFirstVideo) {
           const featuredHTML = `
-            <div class="bg-gray-900 p-8 rounded-lg text-center">
+            <div class="colorful-card p-8 rounded-lg text-center pulsing-glow">
               <h3 class="text-2xl font-bold mb-4">${item.snippet.title}</h3>
               <div class="mx-auto" style="max-width: 560px;">
                 <iframe src="https://www.youtube.com/embed/${item.id.videoId}" allowfullscreen style="width: 100%; height: 315px; border-radius: 8px;"></iframe>
