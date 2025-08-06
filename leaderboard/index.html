@@ -238,6 +238,59 @@
       <section id="leaderboard" class="space-y-12">
         <!-- Leaderboard -->
         <h2 class="text-4xl font-bold text-center mb-8 bg-gradient-to-r from-yellow-400 via-pink-500 to-blue-500 bg-clip-text text-transparent">🏆 300$ Leaderboard</h2>
+        
+        <!-- Bonus Information Section -->
+        <div class="mb-12 p-6 bg-gradient-to-r from-purple-900/30 to-blue-900/30 rounded-xl border border-purple-500/30 backdrop-blur-sm">
+          <h3 class="text-2xl font-bold text-center mb-6 text-yellow-400">💰 BONUS REWARDS FOR CODE USERS!</h3>
+          
+          <div class="grid md:grid-cols-3 gap-6">
+            <!-- Bonus Ladder -->
+            <div class="bg-black/40 p-5 rounded-lg border border-yellow-500/30">
+              <h4 class="text-xl font-bold mb-4 text-green-400">🪜 BONUS LADDER!</h4>
+              <p class="text-sm text-gray-300 mb-4">Climb the ladder and earn extra rewards just for wagering!</p>
+              <div class="space-y-2 text-sm">
+                <div class="flex justify-between items-center p-2 bg-gray-800/50 rounded">
+                  <span>500 coins wagered</span>
+                  <span class="text-yellow-300 font-semibold">+5 coins bonus</span>
+                </div>
+                <div class="flex justify-between items-center p-2 bg-gray-800/50 rounded">
+                  <span>1,000 coins wagered</span>
+                  <span class="text-yellow-300 font-semibold">+10 coins bonus</span>
+                </div>
+                <div class="flex justify-between items-center p-2 bg-gray-800/50 rounded">
+                  <span>2,000 coins wagered</span>
+                  <span class="text-yellow-300 font-semibold">+20 coins bonus</span>
+                </div>
+                <div class="flex justify-between items-center p-2 bg-gray-800/50 rounded">
+                  <span>5,000 coins wagered</span>
+                  <span class="text-yellow-300 font-semibold">+50 coins bonus</span>
+                </div>
+                <p class="text-xs text-gray-400 text-center mt-2">…and more to come!</p>
+              </div>
+            </div>
+
+            <!-- Wager Boost -->
+            <div class="bg-black/40 p-5 rounded-lg border border-blue-500/30">
+              <h4 class="text-xl font-bold mb-4 text-blue-400">🚀 WAGER BOOST!</h4>
+              <p class="text-sm text-gray-300 mb-4">On top of the ladder, you now get extra coins for every wager!</p>
+              <div class="bg-gradient-to-r from-blue-600/20 to-purple-600/20 p-4 rounded-lg text-center">
+                <div class="text-lg font-bold text-white">For every 1,000 coins wagered</div>
+                <div class="text-2xl font-bold text-blue-300 mt-2">+12 bonus coins</div>
+              </div>
+            </div>
+
+            <!-- Cashback Bonus -->
+            <div class="bg-black/40 p-5 rounded-lg border border-pink-500/30">
+              <h4 class="text-xl font-bold mb-4 text-pink-400">💸 CASHBACK BONUS!</h4>
+              <p class="text-sm text-gray-300 mb-4">Giving back even more. Get whole wager commission back to your pocket!</p>
+              <div class="bg-gradient-to-r from-pink-600/20 to-red-600/20 p-4 rounded-lg text-center">
+                <div class="text-lg font-bold text-white">Play more, get more</div>
+                <div class="text-sm text-pink-300 mt-2">Full commission cashback</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div id="leaderboard-content" class="p-6">
           <div class="flex flex-col items-center">
             <h3 class="text-2xl font-bold mb-4 text-yellow-400">Leaderboard</h3>
@@ -390,7 +443,7 @@
       setInterval(updateTimer, 1000); // aktualizuj co sekundę
     }
 
-    function renderLeaderboard(users, containerId = "dynamic-leaderboard", showTickets = false, isOld = false) {
+    function renderLeaderboard(users, containerId = "dynamic-leaderboard", isOld = false) {
       const rewards = [125, 75, 50, 30, 15, 5];
       if (!users || users.length === 0) {
         document.getElementById(containerId).innerHTML = `<div class="text-red-400 mt-4">No data.</div>`;
@@ -399,7 +452,7 @@
       
       // Dodaj nagłówek wskazujący typ leaderboard
       const leaderboardTitle = isOld ? 
-        `<div class="text-center mb-8"><h4 class="text-xl font-bold text-orange-400">📋 Previous Leaderboard (July 2025)</h4><p class="text-sm text-gray-400">Historical data with tickets</p></div>` :
+        `<div class="text-center mb-8"><h4 class="text-xl font-bold text-orange-400">📋 Previous Leaderboard (July 2025)</h4><p class="text-sm text-gray-400">Historical data</p></div>` :
         `<div class="text-center mb-8"><h4 class="text-xl font-bold text-green-400">⚡ Current Leaderboard (August 2025)</h4><p class="text-sm text-gray-400">Live data - updates every 15 minutes</p></div>`;
       
       const sorted = users.slice().sort((a, b) => b.wagered - a.wagered);
@@ -428,7 +481,6 @@
                 <img src="/leaderboard/coin.png" alt="coin" class="inline w-5 h-5" />
                 ${rewards[1]?.toFixed(2) || '-'}
               </div>
-              ${showTickets ? `<div class="mb-1 text-cyan-200 text-xs font-semibold">${Math.floor(sorted[1].wagered / 10)} tickets</div>` : ""}
             </div>
           ` : ''}
           ${sorted[0] ? `
@@ -453,7 +505,6 @@
                 <img src="/leaderboard/coin.png" alt="coin" class="inline w-5 h-5" />
                 ${rewards[0]?.toFixed(2) || '-'}
               </div>
-              ${showTickets ? `<div class="mb-1 text-cyan-200 text-xs font-semibold">${Math.floor(sorted[0].wagered / 10)} tickets</div>` : ""}
             </div>
           ` : ''}
           ${sorted[2] ? `
@@ -478,7 +529,6 @@
                 <img src="/leaderboard/coin.png" alt="coin" class="inline w-5 h-5" />
                 ${rewards[2]?.toFixed(2) || '-'}
               </div>
-              ${showTickets ? `<div class="mb-1 text-cyan-200 text-xs font-semibold">${Math.floor(sorted[2].wagered / 10)} tickets</div>` : ""}
             </div>
           ` : ''}
         </div>
@@ -492,8 +542,7 @@
                 <th class="py-4 px-4 font-bold text-center rounded-tl-lg">#</th>
                 <th class="py-4 px-4 font-bold">User</th>
                 <th class="py-4 px-4 font-bold">Wager</th>
-                <th class="py-4 px-4 font-bold">Reward</th>
-                ${showTickets ? `<th class="py-4 px-4 font-bold text-center rounded-tr-lg">Tickets</th>` : `<th class="rounded-tr-lg"></th>`}
+                <th class="py-4 px-4 font-bold rounded-tr-lg">Reward</th>
               </tr>
             </thead>
             <tbody>
@@ -528,7 +577,6 @@
                 </div>
               ` : '<span class="text-gray-500">-</span>'}
             </td>
-            ${showTickets ? `<td class="py-3 px-4 text-cyan-300 font-semibold text-center">${Math.floor(user.wagered / 10)}</td>` : ""}
           </tr>
         `;
       });
@@ -542,7 +590,7 @@
       document.getElementById(containerId).innerHTML = leaderboardTitle + podiumHTML + tableHTML;
     }
 
-    async function fetchLeaderboard(showTickets = false) {
+    async function fetchLeaderboard() {
       const START_DATE = "2025-08-01T00:00:00.00Z";
       const END_DATE = "2025-08-14T00:00:00.00Z";
       const TYPE = "wagered";
@@ -552,15 +600,15 @@
         const response = await fetch(url);
         const data = await response.json();
         console.log("API response:", data); 
-        renderLeaderboard(data.results || [], "dynamic-leaderboard", showTickets, false);
+        renderLeaderboard(data.results || [], "dynamic-leaderboard", false);
       } catch (e) {
         document.getElementById("dynamic-leaderboard").innerHTML = `<div class="text-red-400 mt-4">Failed to load leaderboard.</div>`;
       }
     }
 
-    async function fetchPreviousLeaderboard(showTickets = true) {
+    async function fetchPreviousLeaderboard() {
       // Poprzedni leaderboard - lipiec 2025
-      const PREV_START_DATE = "2025-07-01T00:00:00.00Z";
+      const PREV_START_DATE = "2025-07-24T00:00:00.00Z";
       const PREV_END_DATE = "2025-07-31T23:59:59.99Z";
       const TYPE = "wagered";
       const CODE = "therosarz";
@@ -569,7 +617,7 @@
         const response = await fetch(url);
         const data = await response.json();
         console.log("Previous leaderboard API response:", data);
-        renderLeaderboard(data.results || [], "dynamic-leaderboard", showTickets, true);
+        renderLeaderboard(data.results || [], "dynamic-leaderboard", true);
       } catch (e) {
         document.getElementById("dynamic-leaderboard").innerHTML = `<div class="text-red-400 mt-4">Failed to load previous leaderboard.</div>`;
       }
@@ -578,23 +626,23 @@
     // Obsługa przycisku
     let showingOld = false;
     document.addEventListener("DOMContentLoaded", () => {
-      fetchLeaderboard(false);
+      fetchLeaderboard();
       startRaceTimer("2025-08-15T00:00:00.00Z"); 
       setInterval(() => {
         if (!showingOld) {
-          fetchLeaderboard(false);
+          fetchLeaderboard();
         }
       }, 900000); // 15 minutes - tylko dla aktualnego leaderboard
       
       document.getElementById("toggle-old-leaderboard").addEventListener("click", async () => {
         showingOld = !showingOld;
         if (showingOld) {
-          await fetchPreviousLeaderboard(true);
+          await fetchPreviousLeaderboard();
           document.getElementById("toggle-old-leaderboard").innerText = "Show current leaderboard";
           document.getElementById("toggle-old-leaderboard").classList.add("bg-yellow-600");
           document.getElementById("toggle-old-leaderboard").classList.remove("gradient-button");
         } else {
-          await fetchLeaderboard(false);
+          await fetchLeaderboard();
           document.getElementById("toggle-old-leaderboard").innerText = "Show old leaderboard";
           document.getElementById("toggle-old-leaderboard").classList.remove("bg-yellow-600");
           document.getElementById("toggle-old-leaderboard").classList.add("gradient-button");
