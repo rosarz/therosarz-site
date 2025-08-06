@@ -239,42 +239,9 @@
         <!-- Leaderboard -->
         <h2 class="text-4xl font-bold text-center mb-8 bg-gradient-to-r from-yellow-400 via-pink-500 to-blue-500 bg-clip-text text-transparent">🏆 300$ Leaderboard</h2>
         
-        <div class="grid lg:grid-cols-5 gap-8">
-          <!-- Bonus Information Sidebar -->
-          <div class="lg:col-span-1 order-2 lg:order-1">
-            <div class="sticky top-24 p-4 bg-gradient-to-b from-purple-900/30 to-blue-900/30 rounded-xl border border-purple-500/30 backdrop-blur-sm">
-              <h3 class="text-lg font-bold text-center mb-4 text-yellow-400">💰 BONUS REWARDS</h3>
-              
-              <!-- Bonus Ladder -->
-              <div class="mb-6 p-4 bg-black/40 rounded-lg border border-yellow-500/30">
-                <h4 class="text-base font-bold mb-3 text-green-400">🪜 BONUS LADDER</h4>
-                <div id="bonus-ladder-content" class="space-y-2 text-xs">
-                  <!-- Content will be populated by JavaScript -->
-                </div>
-              </div>
-
-              <!-- Wager Boost -->
-              <div class="mb-6 p-4 bg-black/40 rounded-lg border border-blue-500/30">
-                <h4 class="text-base font-bold mb-3 text-blue-400">🚀 WAGER BOOST</h4>
-                <div class="bg-gradient-to-r from-blue-600/20 to-purple-600/20 p-3 rounded-lg text-center">
-                  <div class="text-sm font-bold text-white">Every 1,000 coins</div>
-                  <div class="text-lg font-bold text-blue-300">+12 bonus</div>
-                </div>
-              </div>
-
-              <!-- Cashback Bonus -->
-              <div class="p-4 bg-black/40 rounded-lg border border-pink-500/30">
-                <h4 class="text-base font-bold mb-3 text-pink-400">💸 CASHBACK</h4>
-                <div class="bg-gradient-to-r from-pink-600/20 to-red-600/20 p-3 rounded-lg text-center">
-                  <div class="text-sm font-bold text-white">Full commission</div>
-                  <div class="text-sm text-pink-300">cashback</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Main Leaderboard Content -->
-          <div class="lg:col-span-4 order-1 lg:order-2">
+        <div class="flex justify-center">
+          <div class="w-full max-w-5xl">
+            <!-- Main Leaderboard Content (Centered) -->
             <div id="leaderboard-content" class="p-6">
               <div class="flex flex-col items-center">
                 <h3 class="text-2xl font-bold mb-4 text-yellow-400">Leaderboard</h3>
@@ -290,6 +257,39 @@
                 <div id="race-timer" class="text-center text-lg text-cyan-400 font-bold mb-8 bg-black bg-opacity-50 px-6 py-3 rounded-lg border border-cyan-400"></div>
               </div>
               <div id="dynamic-leaderboard"></div>
+            </div>
+          </div>
+
+          <!-- Bonus Information Sidebar (Fixed Right) -->
+          <div class="fixed top-24 right-6 w-80 z-40">
+            <div class="p-6 bg-gradient-to-b from-purple-900/40 to-blue-900/40 rounded-xl border border-purple-500/40 backdrop-blur-md shadow-2xl">
+              <h3 class="text-xl font-bold text-center mb-6 text-yellow-400">💰 BONUS REWARDS</h3>
+              
+              <!-- Bonus Ladder -->
+              <div class="mb-6 p-5 bg-black/50 rounded-lg border border-yellow-500/40">
+                <h4 class="text-lg font-bold mb-4 text-green-400">🪜 BONUS LADDER</h4>
+                <div id="bonus-ladder-content" class="space-y-3 text-sm">
+                  <!-- Content will be populated by JavaScript -->
+                </div>
+              </div>
+
+              <!-- Wager Boost -->
+              <div class="mb-6 p-5 bg-black/50 rounded-lg border border-blue-500/40">
+                <h4 class="text-lg font-bold mb-4 text-blue-400">🚀 WAGER BOOST</h4>
+                <div class="bg-gradient-to-r from-blue-600/30 to-purple-600/30 p-4 rounded-lg text-center">
+                  <div class="text-base font-bold text-white">Every 1,000 coins</div>
+                  <div class="text-xl font-bold text-blue-300 mt-2">+12 bonus</div>
+                </div>
+              </div>
+
+              <!-- Cashback Bonus -->
+              <div class="p-5 bg-black/50 rounded-lg border border-pink-500/40">
+                <h4 class="text-lg font-bold mb-4 text-pink-400">💸 CASHBACK</h4>
+                <div class="bg-gradient-to-r from-pink-600/30 to-red-600/30 p-4 rounded-lg text-center">
+                  <div class="text-base font-bold text-white">Full commission</div>
+                  <div class="text-base text-pink-300 mt-1">cashback</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -450,20 +450,20 @@
         });
 
         ladderHTML += `
-          <div class="p-2 bg-gray-800/50 rounded">
-            <div class="flex justify-between items-center mb-1">
-              <span>${level.threshold} coins</span>
-              <span class="text-yellow-300 font-semibold">+${level.bonus}</span>
+          <div class="p-3 bg-gray-800/60 rounded border-l-4 border-yellow-400/50">
+            <div class="flex justify-between items-center mb-2">
+              <span class="font-medium text-white">${level.threshold} coins</span>
+              <span class="text-yellow-300 font-bold text-base">+${level.bonus}</span>
             </div>
-            <div class="flex justify-between items-center text-xs">
-              <span class="text-cyan-300">${count}/${level.maxCount}</span>
-              <span class="text-gray-400">[${usernames.join(', ') || 'none'}]</span>
+            <div class="flex justify-between items-center">
+              <span class="text-cyan-300 font-semibold">${count}/${level.maxCount}</span>
+              <span class="text-gray-300 text-xs">[${usernames.join(', ') || 'none'}]</span>
             </div>
           </div>
         `;
       });
 
-      ladderHTML += '<p class="text-xs text-gray-400 text-center mt-2">…and more!</p>';
+      ladderHTML += '<p class="text-sm text-gray-400 text-center mt-4">…and more levels coming!</p>';
       
       document.getElementById('bonus-ladder-content').innerHTML = ladderHTML;
     }
