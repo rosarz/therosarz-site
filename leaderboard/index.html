@@ -162,29 +162,45 @@
       100% { background-position: 0% 50%; }
     }
     
-    /* Hover efekty dla całej tabeli */
-    table tbody tr:hover {
-      background: linear-gradient(90deg, rgba(255, 215, 0, 0.1), rgba(102, 126, 234, 0.1));
-      transform: scale(1.01);
-      transition: all 0.3s ease;
-    }
-    
     /* Lepszy kontrast dla tabeli */
     table {
       color: #f1f5f9;
+      border-collapse: separate;
+      border-spacing: 0;
     }
     
     table thead {
-      background: linear-gradient(90deg, rgba(102, 126, 234, 0.8), rgba(75, 85, 200, 0.8)) !important;
+      background: linear-gradient(90deg, rgba(102, 126, 234, 0.9), rgba(75, 85, 200, 0.9)) !important;
+    }
+    
+    table thead th {
+      border: none;
+      position: relative;
     }
     
     table tbody tr {
-      background: rgba(0, 0, 0, 0.4);
+      background: rgba(0, 0, 0, 0.5);
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.2s ease;
     }
     
     table tbody tr:nth-child(even) {
-      background: rgba(26, 26, 46, 0.4);
+      background: rgba(26, 26, 46, 0.5);
+    }
+    
+    table tbody tr:last-child td:first-child {
+      border-bottom-left-radius: 8px;
+    }
+    
+    table tbody tr:last-child td:last-child {
+      border-bottom-right-radius: 8px;
+    }
+    
+    /* Hover efekty dla całej tabeli */
+    table tbody tr:hover {
+      background: linear-gradient(90deg, rgba(255, 215, 0, 0.15), rgba(102, 126, 234, 0.15)) !important;
+      transform: scale(1.01);
+      transition: all 0.3s ease;
     }
     
     /* Kolorowe ramki */
@@ -462,14 +478,14 @@
 
       let tableHTML = `
         <div class="overflow-x-auto">
-          <table class="min-w-full text-left text-gray-200 bg-black bg-opacity-30 rounded-lg">
+          <table class="min-w-full text-left text-gray-200 bg-black bg-opacity-30 rounded-lg border-separate border-spacing-0">
             <thead class="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
               <tr>
-                <th class="py-3 px-4 font-bold">#</th>
-                <th class="py-3 px-4 font-bold">User</th>
-                <th class="py-3 px-4 font-bold">Wager</th>
-                <th class="py-3 px-4 font-bold">Reward</th>
-                ${showTickets ? `<th class="py-3 px-4 font-bold">Tickets</th>` : ""}
+                <th class="py-4 px-4 font-bold text-center rounded-tl-lg">#</th>
+                <th class="py-4 px-4 font-bold">User</th>
+                <th class="py-4 px-4 font-bold">Wager</th>
+                <th class="py-4 px-4 font-bold">Reward</th>
+                ${showTickets ? `<th class="py-4 px-4 font-bold text-center rounded-tr-lg">Tickets</th>` : `<th class="rounded-tr-lg"></th>`}
               </tr>
             </thead>
             <tbody>
@@ -482,20 +498,29 @@
         let anonymized = (visible + stars).slice(0, 8);
 
         tableHTML += `
-          <tr class="bg-gray-800 bg-opacity-70 border-b border-gray-700">
-            <td class="py-2 px-4 font-bold">${i + 1}</td>
-            <td class="py-2 px-4">
-              <img src="${user.avatar || 'bot.png'}" class="w-8 h-8 rounded-full inline-block mr-2 align-middle" alt="avatar">
-              <span class="truncate max-w-xs align-middle">${anonymized}</span>
+          <tr class="bg-gray-800 bg-opacity-70 border-b border-gray-700 hover:bg-opacity-90">
+            <td class="py-3 px-4 font-bold text-center">${i + 1}</td>
+            <td class="py-3 px-4">
+              <div class="flex items-center gap-2">
+                <img src="${user.avatar || 'bot.png'}" class="w-8 h-8 rounded-full" alt="avatar">
+                <span class="truncate max-w-xs">${anonymized}</span>
+              </div>
             </td>
-            <td class="py-2 px-4 text-green-400 font-semibold flex items-center gap-1">
-              <img src="/leaderboard/coin.png" alt="coin" class="inline w-5 h-5" />
-              ${user.wagered.toFixed(2)}
+            <td class="py-3 px-4 text-green-400 font-semibold">
+              <div class="flex items-center gap-1">
+                <img src="/leaderboard/coin.png" alt="coin" class="w-5 h-5" />
+                ${user.wagered.toFixed(2)}
+              </div>
             </td>
-            <td class="py-2 px-4 text-yellow-300 font-semibold flex items-center gap-1">
-              ${rewards[i] ? `<img src="/leaderboard/coin.png" alt="coin" class="inline w-5 h-5" />${rewards[i].toFixed(2)}` : '-'}
+            <td class="py-3 px-4 text-yellow-300 font-semibold">
+              ${rewards[i] ? `
+                <div class="flex items-center gap-1">
+                  <img src="/leaderboard/coin.png" alt="coin" class="w-5 h-5" />
+                  ${rewards[i].toFixed(2)}
+                </div>
+              ` : '<span class="text-gray-500">-</span>'}
             </td>
-            ${showTickets ? `<td class="py-2 px-4 text-yellow-300">${Math.floor(user.wagered / 10)}</td>` : ""}
+            ${showTickets ? `<td class="py-3 px-4 text-cyan-300 font-semibold text-center">${Math.floor(user.wagered / 10)}</td>` : ""}
           </tr>
         `;
       });
