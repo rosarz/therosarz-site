@@ -271,23 +271,14 @@
             <!-- Main Leaderboard Content (Centered) -->
             <div id="leaderboard-content" class="p-6">
               <div class="flex flex-col items-center">
-                <h3 class="text-2xl font-bold mb-4 text-yellow-400">Leaderboard</h3>
-                <p class="text-lg mb-8 text-center">
-                  Wager under <span class="text-yellow-400 font-semibold">therosarz</span> code and participate <span class="text-pink-400 font-semibold">in the leaderboard!</span>
-                </p>
-                <p class="text-sm text-center text-gray-400 mb-8">
-                  The leaderboard updates automatically every 15 minutes.
-                </p>
-                
                 <!-- Site Selector -->
                 <div class="mb-6">
-                  <label class="text-sm font-semibold text-gray-300 mb-4 block text-center">Choose Platform:</label>
-                  <div class="flex justify-center gap-4">
+                  <div class="flex justify-center gap-6">
                     <button id="rain-selector" class="site-selector active" data-platform="rain">
-                      <img src="../raintext.png" alt="Rain.gg" class="h-12 w-auto transition-all duration-300 hover:scale-105" data-platform="rain">
+                      <img src="../raintext.png" alt="Rain.gg" class="h-16 w-auto transition-all duration-300 hover:scale-105" data-platform="rain">
                     </button>
                     <button id="clash-selector" class="site-selector" data-platform="clash">
-                      <img src="../clashggtext.png" alt="Clash.gg" class="h-12 w-auto transition-all duration-300 hover:scale-105" data-platform="clash">
+                      <img src="../clashggtext.png" alt="Clash.gg" class="h-16 w-auto transition-all duration-300 hover:scale-105" data-platform="clash">
                     </button>
                   </div>
                 </div>
@@ -309,8 +300,8 @@
           </div>
 
           <!-- Bonus Information Sidebar (Fixed Right) -->
-          <div class="fixed top-24 right-4 w-72 z-40">
-            <div class="p-5 bg-gradient-to-b from-purple-900/40 to-blue-900/40 rounded-xl border border-purple-500/40 backdrop-blur-md shadow-2xl">
+          <div class="fixed top-24 right-16 w-72 z-40">
+            <div class="p-6 bg-gradient-to-b from-purple-900/40 to-blue-900/40 rounded-xl border border-purple-500/40 backdrop-blur-md shadow-2xl">
               <h3 class="text-lg font-bold text-center mb-5 text-yellow-400">💰 BONUS REWARDS</h3>
               
               <!-- Bonus Ladder -->
@@ -523,11 +514,6 @@
         return;
       }
       
-      // Dodaj nagłówek wskazujący typ leaderboard
-      const leaderboardTitle = isOld ? 
-        `<div class="text-center mb-8"><h4 class="text-xl font-bold text-orange-400">📋 Previous ${siteName} Leaderboard</h4><p class="text-sm text-gray-400">Historical data</p></div>` :
-        `<div class="text-center mb-8"><h4 class="text-xl font-bold text-green-400">⚡ Current ${siteName} Leaderboard</h4><p class="text-sm text-gray-400">Live data - updates every 15 minutes</p></div>`;
-      
       const sorted = users.slice().sort((a, b) => b.wagered - a.wagered);
       const podiumIcons = ["🥈", "🥇", "🥉"];
       let podiumHTML = `
@@ -546,12 +532,12 @@
               }</div>
               <div class="text-xs text-gray-400 mt-1">wagered</div>
               <div class="font-semibold text-white text-lg flex items-center justify-center gap-1">
-                <img src="coin.png" alt="coin" class="inline w-5 h-5" />
+                <img src="../coin.png" alt="coin" class="inline w-5 h-5" />
                 ${sorted[1].wagered.toFixed(2)}
               </div>
               <div class="text-xs text-gray-400 mt-1">reward</div>
               <div class="font-semibold text-yellow-300 text-base mb-1 flex items-center justify-center gap-1">
-                <img src="coin.png" alt="coin" class="inline w-5 h-5" />
+                <img src="../coin.png" alt="coin" class="inline w-5 h-5" />
                 ${rewards[1]?.toFixed(2) || '-'}
               </div>
             </div>
@@ -570,12 +556,12 @@
               }</div>
               <div class="text-xs text-gray-400 mt-1">wagered</div>
               <div class="font-semibold text-white text-lg flex items-center justify-center gap-1">
-                <img src="coin.png" alt="coin" class="inline w-5 h-5" />
+                <img src="../coin.png" alt="coin" class="inline w-5 h-5" />
                 ${sorted[0].wagered.toFixed(2)}
               </div>
               <div class="text-xs text-gray-400 mt-1">reward</div>
               <div class="font-semibold text-yellow-300 text-base mb-1 flex items-center justify-center gap-1">
-                <img src="coin.png" alt="coin" class="inline w-5 h-5" />
+                <img src="../coin.png" alt="coin" class="inline w-5 h-5" />
                 ${rewards[0]?.toFixed(2) || '-'}
               </div>
             </div>
@@ -594,12 +580,12 @@
               }</div>
               <div class="text-xs text-gray-400 mt-1">wagered</div>
               <div class="font-semibold text-white text-lg flex items-center justify-center gap-1">
-                <img src="coin.png" alt="coin" class="inline w-5 h-5" />
+                <img src="../coin.png" alt="coin" class="inline w-5 h-5" />
                 ${sorted[2].wagered.toFixed(2)}
               </div>
               <div class="text-xs text-gray-400 mt-1">reward</div>
               <div class="font-semibold text-yellow-300 text-base mb-1 flex items-center justify-center gap-1">
-                <img src="coin.png" alt="coin" class="inline w-5 h-5" />
+                <img src="../coin.png" alt="coin" class="inline w-5 h-5" />
                 ${rewards[2]?.toFixed(2) || '-'}
               </div>
             </div>
@@ -638,14 +624,14 @@
             </td>
             <td class="py-3 px-4 text-green-400 font-semibold">
               <div class="flex items-center gap-1">
-                <img src="coin.png" alt="coin" class="w-5 h-5" />
+                <img src="../coin.png" alt="coin" class="w-5 h-5" />
                 ${user.wagered.toFixed(2)}
               </div>
             </td>
             <td class="py-3 px-4 text-yellow-300 font-semibold">
               ${rewards[i] ? `
                 <div class="flex items-center gap-1">
-                  <img src="coin.png" alt="coin" class="w-5 h-5" />
+                  <img src="../coin.png" alt="coin" class="w-5 h-5" />
                   ${rewards[i].toFixed(2)}
                 </div>
               ` : '<span class="text-gray-500">-</span>'}
@@ -660,7 +646,7 @@
         </div>
       `;
 
-      document.getElementById(containerId).innerHTML = leaderboardTitle + podiumHTML + tableHTML;
+      document.getElementById(containerId).innerHTML = podiumHTML + tableHTML;
       
       // Update bonus ladder with current users data
       updateBonusLadder(sorted);
