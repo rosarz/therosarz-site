@@ -263,26 +263,26 @@
 
     <main class="max-w-7xl mx-auto px-6 py-12">
       <section id="leaderboard" class="space-y-12">
+        <!-- Platform Selector at Top -->
+        <div class="flex justify-center mb-8">
+          <div class="flex justify-center gap-8">
+            <button id="rain-selector" class="site-selector active" data-platform="rain">
+              <img src="../raintext.png" alt="Rain.gg" class="h-20 w-auto transition-all duration-300 hover:scale-105" data-platform="rain">
+            </button>
+            <button id="clash-selector" class="site-selector" data-platform="clash">
+              <img src="../clashggtext.png" alt="Clash.gg" class="h-20 w-auto transition-all duration-300 hover:scale-105" data-platform="clash">
+            </button>
+          </div>
+        </div>
+        
         <!-- Leaderboard -->
-        <h2 class="text-4xl font-bold text-center mb-8 bg-gradient-to-r from-yellow-400 via-pink-500 to-blue-500 bg-clip-text text-transparent">🏆 300$ Leaderboard</h2>
+        <h2 id="leaderboard-title" class="text-4xl font-bold text-center mb-8 bg-gradient-to-r from-yellow-400 via-pink-500 to-blue-500 bg-clip-text text-transparent">🏆 Leaderboard</h2>
         
         <div class="flex justify-center">
           <div class="w-full max-w-5xl">
             <!-- Main Leaderboard Content (Centered) -->
             <div id="leaderboard-content" class="p-6">
               <div class="flex flex-col items-center">
-                <!-- Site Selector -->
-                <div class="mb-6">
-                  <div class="flex justify-center gap-6">
-                    <button id="rain-selector" class="site-selector active" data-platform="rain">
-                      <img src="../raintext.png" alt="Rain.gg" class="h-16 w-auto transition-all duration-300 hover:scale-105" data-platform="rain">
-                    </button>
-                    <button id="clash-selector" class="site-selector" data-platform="clash">
-                      <img src="../clashggtext.png" alt="Clash.gg" class="h-16 w-auto transition-all duration-300 hover:scale-105" data-platform="clash">
-                    </button>
-                  </div>
-                </div>
-                
                 <!-- Current/Previous Buttons -->
                 <div class="mb-6 flex justify-center gap-4">
                   <button id="current-btn" class="active px-6 py-3 gradient-button text-white rounded-lg font-semibold shadow-lg transition-all duration-300">
@@ -659,13 +659,15 @@
           startDate: "2025-08-01T00:00:00.00Z",
           endDate: "2025-08-14T00:00:00.00Z",
           code: "therosarz",
-          name: "Rain.gg"
+          name: "Rain.gg",
+          defaultPrize: "300$"
         },
         clash: {
           startDate: "2025-08-01T00:00:00.00Z",
           endDate: "2025-08-14T00:00:00.00Z", 
           code: "THEROSARZ",
-          name: "Clash.gg"
+          name: "Clash.gg",
+          defaultPrize: "200$"
         }
       };
 
@@ -677,6 +679,11 @@
         const response = await fetch(url);
         const data = await response.json();
         console.log(`${config.name} API response:`, data); 
+        
+        // Update title with prize pool if available
+        const prizePool = data.prize_pool || data.prizePool || config.defaultPrize;
+        document.getElementById('leaderboard-title').textContent = `🏆 ${prizePool} Leaderboard`;
+        
         renderLeaderboard(data.results || [], "dynamic-leaderboard", false, config.name);
       } catch (e) {
         document.getElementById("dynamic-leaderboard").innerHTML = `<div class="text-red-400 mt-4">Failed to load ${config.name} leaderboard.</div>`;
@@ -690,13 +697,15 @@
           startDate: "2025-07-24T00:00:00.00Z",
           endDate: "2025-07-31T23:59:59.99Z",
           code: "therosarz",
-          name: "Rain.gg"
+          name: "Rain.gg",
+          defaultPrize: "300$"
         },
         clash: {
           startDate: "2025-07-24T00:00:00.00Z",
           endDate: "2025-07-31T23:59:59.99Z",
           code: "THEROSARZ",
-          name: "Clash.gg"
+          name: "Clash.gg",
+          defaultPrize: "200$"
         }
       };
 
@@ -708,6 +717,11 @@
         const response = await fetch(url);
         const data = await response.json();
         console.log(`Previous ${config.name} leaderboard API response:`, data);
+        
+        // Update title with prize pool if available
+        const prizePool = data.prize_pool || data.prizePool || config.defaultPrize;
+        document.getElementById('leaderboard-title').textContent = `🏆 ${prizePool} Leaderboard (Previous)`;
+        
         renderLeaderboard(data.results || [], "dynamic-leaderboard", true, config.name);
       } catch (e) {
         document.getElementById("dynamic-leaderboard").innerHTML = `<div class="text-red-400 mt-4">Failed to load previous ${config.name} leaderboard.</div>`;
