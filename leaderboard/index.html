@@ -251,6 +251,20 @@
                 <p class="text-sm text-center text-gray-400 mb-8">
                   The leaderboard updates automatically every 15 minutes.
                 </p>
+                
+                <!-- Site Selector -->
+                <div class="mb-6">
+                  <label class="text-sm font-semibold text-gray-300 mb-2 block">Choose Platform:</label>
+                  <select id="site-selector" class="px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:border-yellow-400 focus:outline-none">
+                    <option value="rain">Rain.gg</option>
+                    <option value="upgrader">Upgrader.com</option>
+                    <option value="csgobig">CSGOBIG</option>
+                    <option value="csgogem">CSGOGEM</option>
+                    <option value="daddyskins">DaddySkins</option>
+                    <option value="clash">Clash.gg</option>
+                  </select>
+                </div>
+                
                 <button id="toggle-old-leaderboard" class="mb-8 px-6 py-3 gradient-button text-white rounded-lg font-semibold shadow-lg">
                   Show old leaderboard
                 </button>
@@ -468,17 +482,17 @@
       document.getElementById('bonus-ladder-content').innerHTML = ladderHTML;
     }
 
-    function renderLeaderboard(users, containerId = "dynamic-leaderboard", isOld = false) {
+    function renderLeaderboard(users, containerId = "dynamic-leaderboard", isOld = false, siteName = "Platform") {
       const rewards = [125, 75, 50, 30, 15, 5];
       if (!users || users.length === 0) {
-        document.getElementById(containerId).innerHTML = `<div class="text-red-400 mt-4">No data.</div>`;
+        document.getElementById(containerId).innerHTML = `<div class="text-red-400 mt-4">No data for ${siteName}.</div>`;
         return;
       }
       
       // Dodaj nagłówek wskazujący typ leaderboard
       const leaderboardTitle = isOld ? 
-        `<div class="text-center mb-8"><h4 class="text-xl font-bold text-orange-400">📋 Previous Leaderboard (July 2025)</h4><p class="text-sm text-gray-400">Historical data</p></div>` :
-        `<div class="text-center mb-8"><h4 class="text-xl font-bold text-green-400">⚡ Current Leaderboard (August 2025)</h4><p class="text-sm text-gray-400">Live data - updates every 15 minutes</p></div>`;
+        `<div class="text-center mb-8"><h4 class="text-xl font-bold text-orange-400">📋 Previous ${siteName} Leaderboard</h4><p class="text-sm text-gray-400">Historical data</p></div>` :
+        `<div class="text-center mb-8"><h4 class="text-xl font-bold text-green-400">⚡ Current ${siteName} Leaderboard</h4><p class="text-sm text-gray-400">Live data - updates every 15 minutes</p></div>`;
       
       const sorted = users.slice().sort((a, b) => b.wagered - a.wagered);
       const podiumIcons = ["🥈", "🥇", "🥉"];
@@ -618,59 +632,151 @@
       updateBonusLadder(sorted);
     }
 
-    async function fetchLeaderboard() {
-      const START_DATE = "2025-08-01T00:00:00.00Z";
-      const END_DATE = "2025-08-14T00:00:00.00Z";
+    async function fetchLeaderboard(siteName = 'rain') {
+      // Konfiguracja dla różnych stron
+      const siteConfigs = {
+        rain: {
+          startDate: "2025-08-01T00:00:00.00Z",
+          endDate: "2025-08-14T00:00:00.00Z",
+          code: "therosarz",
+          name: "Rain.gg"
+        },
+        upgrader: {
+          startDate: "2025-08-01T00:00:00.00Z", 
+          endDate: "2025-08-14T00:00:00.00Z",
+          code: "THEROSARZ",
+          name: "Upgrader.com"
+        },
+        csgobig: {
+          startDate: "2025-08-01T00:00:00.00Z",
+          endDate: "2025-08-14T00:00:00.00Z", 
+          code: "therosarz",
+          name: "CSGOBIG"
+        },
+        csgogem: {
+          startDate: "2025-08-01T00:00:00.00Z",
+          endDate: "2025-08-14T00:00:00.00Z",
+          code: "therosarz", 
+          name: "CSGOGEM"
+        },
+        daddyskins: {
+          startDate: "2025-08-01T00:00:00.00Z",
+          endDate: "2025-08-14T00:00:00.00Z",
+          code: "therosarz",
+          name: "DaddySkins"
+        },
+        clash: {
+          startDate: "2025-08-01T00:00:00.00Z",
+          endDate: "2025-08-14T00:00:00.00Z", 
+          code: "THEROSARZ",
+          name: "Clash.gg"
+        }
+      };
+
+      const config = siteConfigs[siteName] || siteConfigs.rain;
       const TYPE = "wagered";
-      const CODE = "therosarz";
-      const url = `/api/leaderboard?start_date=${START_DATE}&end_date=${END_DATE}&type=${TYPE}&code=${CODE}`;
+      const url = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&type=${TYPE}&code=${config.code}&site=${siteName}`;
+      
       try {
         const response = await fetch(url);
         const data = await response.json();
-        console.log("API response:", data); 
-        renderLeaderboard(data.results || [], "dynamic-leaderboard", false);
+        console.log(`${config.name} API response:`, data); 
+        renderLeaderboard(data.results || [], "dynamic-leaderboard", false, config.name);
       } catch (e) {
-        document.getElementById("dynamic-leaderboard").innerHTML = `<div class="text-red-400 mt-4">Failed to load leaderboard.</div>`;
+        document.getElementById("dynamic-leaderboard").innerHTML = `<div class="text-red-400 mt-4">Failed to load ${config.name} leaderboard.</div>`;
       }
     }
 
-    async function fetchPreviousLeaderboard() {
-      // Poprzedni leaderboard - lipiec 2025
-      const PREV_START_DATE = "2025-07-24T00:00:00.00Z";
-      const PREV_END_DATE = "2025-07-31T23:59:59.99Z";
+    async function fetchPreviousLeaderboard(siteName = 'rain') {
+      // Konfiguracja dla różnych stron - poprzedni leaderboard
+      const siteConfigs = {
+        rain: {
+          startDate: "2025-07-24T00:00:00.00Z",
+          endDate: "2025-07-31T23:59:59.99Z",
+          code: "therosarz",
+          name: "Rain.gg"
+        },
+        upgrader: {
+          startDate: "2025-07-24T00:00:00.00Z",
+          endDate: "2025-07-31T23:59:59.99Z",
+          code: "THEROSARZ", 
+          name: "Upgrader.com"
+        },
+        csgobig: {
+          startDate: "2025-07-24T00:00:00.00Z",
+          endDate: "2025-07-31T23:59:59.99Z",
+          code: "therosarz",
+          name: "CSGOBIG"
+        },
+        csgogem: {
+          startDate: "2025-07-24T00:00:00.00Z", 
+          endDate: "2025-07-31T23:59:59.99Z",
+          code: "therosarz",
+          name: "CSGOGEM"
+        },
+        daddyskins: {
+          startDate: "2025-07-24T00:00:00.00Z",
+          endDate: "2025-07-31T23:59:59.99Z", 
+          code: "therosarz",
+          name: "DaddySkins"
+        },
+        clash: {
+          startDate: "2025-07-24T00:00:00.00Z",
+          endDate: "2025-07-31T23:59:59.99Z",
+          code: "THEROSARZ",
+          name: "Clash.gg"
+        }
+      };
+
+      const config = siteConfigs[siteName] || siteConfigs.rain;
       const TYPE = "wagered";
-      const CODE = "therosarz";
-      const url = `/api/leaderboard?start_date=${PREV_START_DATE}&end_date=${PREV_END_DATE}&type=${TYPE}&code=${CODE}`;
+      const url = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&type=${TYPE}&code=${config.code}&site=${siteName}`;
+      
       try {
         const response = await fetch(url);
         const data = await response.json();
-        console.log("Previous leaderboard API response:", data);
-        renderLeaderboard(data.results || [], "dynamic-leaderboard", true);
+        console.log(`Previous ${config.name} leaderboard API response:`, data);
+        renderLeaderboard(data.results || [], "dynamic-leaderboard", true, config.name);
       } catch (e) {
-        document.getElementById("dynamic-leaderboard").innerHTML = `<div class="text-red-400 mt-4">Failed to load previous leaderboard.</div>`;
+        document.getElementById("dynamic-leaderboard").innerHTML = `<div class="text-red-400 mt-4">Failed to load previous ${config.name} leaderboard.</div>`;
       }
     }
 
-    // Obsługa przycisku
+    // Obsługa przycisku i selektora stron
     let showingOld = false;
+    let currentSite = 'rain';
+    
     document.addEventListener("DOMContentLoaded", () => {
-      fetchLeaderboard();
+      fetchLeaderboard(currentSite);
       startRaceTimer("2025-08-15T00:00:00.00Z"); 
+      
+      // Auto refresh tylko dla aktualnego leaderboard
       setInterval(() => {
         if (!showingOld) {
-          fetchLeaderboard();
+          fetchLeaderboard(currentSite);
         }
-      }, 900000); // 15 minutes - tylko dla aktualnego leaderboard
+      }, 900000); // 15 minutes
       
+      // Obsługa selektora stron
+      document.getElementById("site-selector").addEventListener("change", async (e) => {
+        currentSite = e.target.value;
+        if (showingOld) {
+          await fetchPreviousLeaderboard(currentSite);
+        } else {
+          await fetchLeaderboard(currentSite);
+        }
+      });
+      
+      // Obsługa przycisku przełączania czasów
       document.getElementById("toggle-old-leaderboard").addEventListener("click", async () => {
         showingOld = !showingOld;
         if (showingOld) {
-          await fetchPreviousLeaderboard();
+          await fetchPreviousLeaderboard(currentSite);
           document.getElementById("toggle-old-leaderboard").innerText = "Show current leaderboard";
           document.getElementById("toggle-old-leaderboard").classList.add("bg-yellow-600");
           document.getElementById("toggle-old-leaderboard").classList.remove("gradient-button");
         } else {
-          await fetchLeaderboard();
+          await fetchLeaderboard(currentSite);
           document.getElementById("toggle-old-leaderboard").innerText = "Show old leaderboard";
           document.getElementById("toggle-old-leaderboard").classList.remove("bg-yellow-600");
           document.getElementById("toggle-old-leaderboard").classList.add("gradient-button");
