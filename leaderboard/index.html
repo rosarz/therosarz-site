@@ -211,6 +211,33 @@
       background: linear-gradient(45deg, #667eea, #764ba2) border-box;
       border-radius: 12px;
     }
+    
+    /* Site selector styles */
+    .site-selector {
+      padding: 8px;
+      border-radius: 12px;
+      border: 2px solid rgba(102, 126, 234, 0.3);
+      background: rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .site-selector:hover {
+      border-color: rgba(255, 215, 0, 0.6);
+      background: rgba(26, 26, 46, 0.5);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .site-selector.active {
+      border-color: #ffd700;
+      background: rgba(255, 215, 0, 0.1);
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+    }
+    
+    .site-selector.active:hover {
+      box-shadow: 0 0 25px rgba(255, 215, 0, 0.6);
+    }
   </style>
 </head>
 
@@ -254,15 +281,15 @@
                 
                 <!-- Site Selector -->
                 <div class="mb-6">
-                  <label class="text-sm font-semibold text-gray-300 mb-2 block">Choose Platform:</label>
-                  <select id="site-selector" class="px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:border-yellow-400 focus:outline-none">
-                    <option value="rain">Rain.gg</option>
-                    <option value="upgrader">Upgrader.com</option>
-                    <option value="csgobig">CSGOBIG</option>
-                    <option value="csgogem">CSGOGEM</option>
-                    <option value="daddyskins">DaddySkins</option>
-                    <option value="clash">Clash.gg</option>
-                  </select>
+                  <label class="text-sm font-semibold text-gray-300 mb-4 block text-center">Choose Platform:</label>
+                  <div class="flex justify-center gap-4">
+                    <button id="rain-selector" class="site-selector active" data-site="rain">
+                      <img src="raintext.png" alt="Rain.gg" class="h-12 w-auto transition-all duration-300 hover:scale-105">
+                    </button>
+                    <button id="clash-selector" class="site-selector" data-site="clash">
+                      <img src="clashggtext.png" alt="Clash.gg" class="h-12 w-auto transition-all duration-300 hover:scale-105">
+                    </button>
+                  </div>
                 </div>
                 
                 <button id="toggle-old-leaderboard" class="mb-8 px-6 py-3 gradient-button text-white rounded-lg font-semibold shadow-lg">
@@ -633,37 +660,13 @@
     }
 
     async function fetchLeaderboard(siteName = 'rain') {
-      // Konfiguracja dla różnych stron
+      // Konfiguracja tylko dla Rain.gg i Clash.gg
       const siteConfigs = {
         rain: {
           startDate: "2025-08-01T00:00:00.00Z",
           endDate: "2025-08-14T00:00:00.00Z",
           code: "therosarz",
           name: "Rain.gg"
-        },
-        upgrader: {
-          startDate: "2025-08-01T00:00:00.00Z", 
-          endDate: "2025-08-14T00:00:00.00Z",
-          code: "THEROSARZ",
-          name: "Upgrader.com"
-        },
-        csgobig: {
-          startDate: "2025-08-01T00:00:00.00Z",
-          endDate: "2025-08-14T00:00:00.00Z", 
-          code: "therosarz",
-          name: "CSGOBIG"
-        },
-        csgogem: {
-          startDate: "2025-08-01T00:00:00.00Z",
-          endDate: "2025-08-14T00:00:00.00Z",
-          code: "therosarz", 
-          name: "CSGOGEM"
-        },
-        daddyskins: {
-          startDate: "2025-08-01T00:00:00.00Z",
-          endDate: "2025-08-14T00:00:00.00Z",
-          code: "therosarz",
-          name: "DaddySkins"
         },
         clash: {
           startDate: "2025-08-01T00:00:00.00Z",
@@ -688,37 +691,13 @@
     }
 
     async function fetchPreviousLeaderboard(siteName = 'rain') {
-      // Konfiguracja dla różnych stron - poprzedni leaderboard
+      // Konfiguracja tylko dla Rain.gg i Clash.gg - poprzedni leaderboard
       const siteConfigs = {
         rain: {
           startDate: "2025-07-24T00:00:00.00Z",
           endDate: "2025-07-31T23:59:59.99Z",
           code: "therosarz",
           name: "Rain.gg"
-        },
-        upgrader: {
-          startDate: "2025-07-24T00:00:00.00Z",
-          endDate: "2025-07-31T23:59:59.99Z",
-          code: "THEROSARZ", 
-          name: "Upgrader.com"
-        },
-        csgobig: {
-          startDate: "2025-07-24T00:00:00.00Z",
-          endDate: "2025-07-31T23:59:59.99Z",
-          code: "therosarz",
-          name: "CSGOBIG"
-        },
-        csgogem: {
-          startDate: "2025-07-24T00:00:00.00Z", 
-          endDate: "2025-07-31T23:59:59.99Z",
-          code: "therosarz",
-          name: "CSGOGEM"
-        },
-        daddyskins: {
-          startDate: "2025-07-24T00:00:00.00Z",
-          endDate: "2025-07-31T23:59:59.99Z", 
-          code: "therosarz",
-          name: "DaddySkins"
         },
         clash: {
           startDate: "2025-07-24T00:00:00.00Z",
@@ -742,46 +721,58 @@
       }
     }
 
-    // Obsługa przycisku i selektora stron
-    let showingOld = false;
-    let currentSite = 'rain';
-    
+    // Obsługa przycisków platformy i czasów
     document.addEventListener("DOMContentLoaded", () => {
-      fetchLeaderboard(currentSite);
       startRaceTimer("2025-08-15T00:00:00.00Z"); 
       
       // Auto refresh tylko dla aktualnego leaderboard
       setInterval(() => {
-        if (!showingOld) {
-          fetchLeaderboard(currentSite);
+        const currentPlatform = document.querySelector('.site-selector.active img')?.dataset.platform || 'rain';
+        if (document.getElementById('current-btn').classList.contains('active')) {
+          fetchLeaderboard(currentPlatform);
         }
       }, 900000); // 15 minutes
       
-      // Obsługa selektora stron
-      document.getElementById("site-selector").addEventListener("change", async (e) => {
-        currentSite = e.target.value;
-        if (showingOld) {
-          await fetchPreviousLeaderboard(currentSite);
-        } else {
-          await fetchLeaderboard(currentSite);
-        }
+      // Zmieniona obsługa selektora platformy - obsługa obrazków
+      const platformButtons = document.querySelectorAll('.site-selector img');
+      let currentPlatform = 'rain';
+
+      platformButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          // Usunięcie klasy active ze wszystkich kontenerów przycisków
+          document.querySelectorAll('.site-selector').forEach(btn => btn.classList.remove('active'));
+          
+          // Dodanie klasy active do kontenera klikniętego przycisku
+          this.parentElement.classList.add('active');
+          
+          // Ustawienie nowej platformy
+          currentPlatform = this.dataset.platform;
+          
+          // Pobranie nowego leaderboardu
+          if (document.getElementById('current-btn').classList.contains('active')) {
+            fetchLeaderboard(currentPlatform);
+          } else if (document.getElementById('previous-btn').classList.contains('active')) {
+            fetchPreviousLeaderboard(currentPlatform);
+          }
+        });
       });
-      
-      // Obsługa przycisku przełączania czasów
-      document.getElementById("toggle-old-leaderboard").addEventListener("click", async () => {
-        showingOld = !showingOld;
-        if (showingOld) {
-          await fetchPreviousLeaderboard(currentSite);
-          document.getElementById("toggle-old-leaderboard").innerText = "Show current leaderboard";
-          document.getElementById("toggle-old-leaderboard").classList.add("bg-yellow-600");
-          document.getElementById("toggle-old-leaderboard").classList.remove("gradient-button");
-        } else {
-          await fetchLeaderboard(currentSite);
-          document.getElementById("toggle-old-leaderboard").innerText = "Show old leaderboard";
-          document.getElementById("toggle-old-leaderboard").classList.remove("bg-yellow-600");
-          document.getElementById("toggle-old-leaderboard").classList.add("gradient-button");
-        }
+
+      // Obsługa przycisków Current/Previous
+      document.getElementById('current-btn').addEventListener('click', function() {
+        this.classList.add('active');
+        document.getElementById('previous-btn').classList.remove('active');
+        fetchLeaderboard(currentPlatform);
       });
+
+      document.getElementById('previous-btn').addEventListener('click', function() {
+        this.classList.add('active');
+        document.getElementById('current-btn').classList.remove('active');
+        fetchPreviousLeaderboard(currentPlatform);
+      });
+
+      // Inicjalizacja - Rain.gg jako aktywny i załaduj current leaderboard
+      document.querySelector('[data-platform="rain"]').parentElement.classList.add('active');
+      fetchLeaderboard('rain');
     });
   </script>
 </body>
