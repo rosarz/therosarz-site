@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>therosarz - Leaderboard</title>
-  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <link rel="icon" href="../favicon.ico" type="image/x-icon" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,700&display=swap" rel="stylesheet">
   <style>
@@ -250,7 +250,7 @@
     <nav class="flex items-center justify-between py-4 px-6 bg-black bg-opacity-60 shadow-md sticky top-0 z-50">
       <div class="flex items-center">
         <a href="/" class="logo-link">
-          <img src="favicon.ico" alt="Avatar" class="logo-img">
+          <img src="../favicon.ico" alt="Avatar" class="logo-img">
           <span class="text-xl font-bold">therosarz</span>
         </a>
       </div>
@@ -283,18 +283,25 @@
                 <div class="mb-6">
                   <label class="text-sm font-semibold text-gray-300 mb-4 block text-center">Choose Platform:</label>
                   <div class="flex justify-center gap-4">
-                    <button id="rain-selector" class="site-selector active" data-site="rain">
-                      <img src="raintext.png" alt="Rain.gg" class="h-12 w-auto transition-all duration-300 hover:scale-105">
+                    <button id="rain-selector" class="site-selector active" data-platform="rain">
+                      <img src="../raintext.png" alt="Rain.gg" class="h-12 w-auto transition-all duration-300 hover:scale-105" data-platform="rain">
                     </button>
-                    <button id="clash-selector" class="site-selector" data-site="clash">
-                      <img src="clashggtext.png" alt="Clash.gg" class="h-12 w-auto transition-all duration-300 hover:scale-105">
+                    <button id="clash-selector" class="site-selector" data-platform="clash">
+                      <img src="../clashggtext.png" alt="Clash.gg" class="h-12 w-auto transition-all duration-300 hover:scale-105" data-platform="clash">
                     </button>
                   </div>
                 </div>
                 
-                <button id="toggle-old-leaderboard" class="mb-8 px-6 py-3 gradient-button text-white rounded-lg font-semibold shadow-lg">
-                  Show old leaderboard
-                </button>
+                <!-- Current/Previous Buttons -->
+                <div class="mb-6 flex justify-center gap-4">
+                  <button id="current-btn" class="active px-6 py-3 gradient-button text-white rounded-lg font-semibold shadow-lg transition-all duration-300">
+                    Current Leaderboard
+                  </button>
+                  <button id="previous-btn" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-semibold shadow-lg transition-all duration-300">
+                    Previous Leaderboard
+                  </button>
+                </div>
+                
                 <div id="race-timer" class="text-center text-lg text-cyan-400 font-bold mb-8 bg-black bg-opacity-50 px-6 py-3 rounded-lg border border-cyan-400"></div>
               </div>
               <div id="dynamic-leaderboard"></div>
@@ -528,7 +535,7 @@
           ${sorted[1] ? `
             <div class="podium-card second flex flex-col items-center w-44 border-2 border-gray-600 rounded-xl shadow-lg bg-[#1a1a1a] mb-0">
               <div class="text-4xl mb-1">🥈</div>
-              <img src="${sorted[1].avatar || 'bot.png'}" class="w-16 h-16 rounded-full border border-gray-700 my-1" alt="avatar">
+              <img src="${sorted[1].avatar || '../bot.png'}" class="w-16 h-16 rounded-full border border-gray-700 my-1" alt="avatar">
               <div class="font-bold text-base text-center truncate">${
                 (() => {
                   let nick = sorted[1].username || '';
@@ -539,12 +546,12 @@
               }</div>
               <div class="text-xs text-gray-400 mt-1">wagered</div>
               <div class="font-semibold text-white text-lg flex items-center justify-center gap-1">
-                <img src="/leaderboard/coin.png" alt="coin" class="inline w-5 h-5" />
+                <img src="coin.png" alt="coin" class="inline w-5 h-5" />
                 ${sorted[1].wagered.toFixed(2)}
               </div>
               <div class="text-xs text-gray-400 mt-1">reward</div>
               <div class="font-semibold text-yellow-300 text-base mb-1 flex items-center justify-center gap-1">
-                <img src="/leaderboard/coin.png" alt="coin" class="inline w-5 h-5" />
+                <img src="coin.png" alt="coin" class="inline w-5 h-5" />
                 ${rewards[1]?.toFixed(2) || '-'}
               </div>
             </div>
@@ -552,7 +559,7 @@
           ${sorted[0] ? `
             <div class="podium-card first flex flex-col items-center w-48 border-2 border-yellow-400 rounded-xl shadow-xl bg-[#1a1a1a] -mb-6 z-10 scale-105">
               <div class="text-5xl mb-1">🥇</div>
-              <img src="${sorted[0].avatar || 'bot.png'}" class="w-20 h-20 rounded-full border border-gray-700 my-1" alt="avatar">
+              <img src="${sorted[0].avatar || '../bot.png'}" class="w-20 h-20 rounded-full border border-gray-700 my-1" alt="avatar">
               <div class="font-bold text-lg text-center truncate">${
                 (() => {
                   let nick = sorted[0].username || '';
@@ -563,12 +570,12 @@
               }</div>
               <div class="text-xs text-gray-400 mt-1">wagered</div>
               <div class="font-semibold text-white text-lg flex items-center justify-center gap-1">
-                <img src="/leaderboard/coin.png" alt="coin" class="inline w-5 h-5" />
+                <img src="coin.png" alt="coin" class="inline w-5 h-5" />
                 ${sorted[0].wagered.toFixed(2)}
               </div>
               <div class="text-xs text-gray-400 mt-1">reward</div>
               <div class="font-semibold text-yellow-300 text-base mb-1 flex items-center justify-center gap-1">
-                <img src="/leaderboard/coin.png" alt="coin" class="inline w-5 h-5" />
+                <img src="coin.png" alt="coin" class="inline w-5 h-5" />
                 ${rewards[0]?.toFixed(2) || '-'}
               </div>
             </div>
@@ -576,7 +583,7 @@
           ${sorted[2] ? `
             <div class="podium-card third flex flex-col items-center w-44 border-2 border-gray-600 rounded-xl shadow-lg bg-[#1a1a1a] mb-0">
               <div class="text-4xl mb-1">🥉</div>
-              <img src="${sorted[2].avatar || 'bot.png'}" class="w-16 h-16 rounded-full border border-gray-700 my-1" alt="avatar">
+              <img src="${sorted[2].avatar || '../bot.png'}" class="w-16 h-16 rounded-full border border-gray-700 my-1" alt="avatar">
               <div class="font-bold text-base text-center truncate">${
                 (() => {
                   let nick = sorted[2].username || '';
@@ -587,12 +594,12 @@
               }</div>
               <div class="text-xs text-gray-400 mt-1">wagered</div>
               <div class="font-semibold text-white text-lg flex items-center justify-center gap-1">
-                <img src="/leaderboard/coin.png" alt="coin" class="inline w-5 h-5" />
+                <img src="coin.png" alt="coin" class="inline w-5 h-5" />
                 ${sorted[2].wagered.toFixed(2)}
               </div>
               <div class="text-xs text-gray-400 mt-1">reward</div>
               <div class="font-semibold text-yellow-300 text-base mb-1 flex items-center justify-center gap-1">
-                <img src="/leaderboard/coin.png" alt="coin" class="inline w-5 h-5" />
+                <img src="coin.png" alt="coin" class="inline w-5 h-5" />
                 ${rewards[2]?.toFixed(2) || '-'}
               </div>
             </div>
@@ -625,20 +632,20 @@
             <td class="py-3 px-4 font-bold text-center">${i + 1}</td>
             <td class="py-3 px-4">
               <div class="flex items-center gap-2">
-                <img src="${user.avatar || 'bot.png'}" class="w-8 h-8 rounded-full" alt="avatar">
+                <img src="${user.avatar || '../bot.png'}" class="w-8 h-8 rounded-full" alt="avatar">
                 <span class="truncate max-w-xs">${anonymized}</span>
               </div>
             </td>
             <td class="py-3 px-4 text-green-400 font-semibold">
               <div class="flex items-center gap-1">
-                <img src="/leaderboard/coin.png" alt="coin" class="w-5 h-5" />
+                <img src="coin.png" alt="coin" class="w-5 h-5" />
                 ${user.wagered.toFixed(2)}
               </div>
             </td>
             <td class="py-3 px-4 text-yellow-300 font-semibold">
               ${rewards[i] ? `
                 <div class="flex items-center gap-1">
-                  <img src="/leaderboard/coin.png" alt="coin" class="w-5 h-5" />
+                  <img src="coin.png" alt="coin" class="w-5 h-5" />
                   ${rewards[i].toFixed(2)}
                 </div>
               ` : '<span class="text-gray-500">-</span>'}
