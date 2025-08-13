@@ -480,9 +480,12 @@
       console.log(`Found ${users.length} users in Clash.gg data`);
       
       return users.map((user, index) => {
+        console.log(`Raw user ${index + 1} data:`, user);
+        console.log(`Available user fields:`, Object.keys(user));
+        
         const result = {
           username: user.username || user.name || user.user || user.displayName || `User ${index + 1}`,
-          wagered: parseFloat(user.wagered || user.wager || user.totalWager || user.amount || user.value || 0) / 100, // Convert from gem cents to gems
+          wagered: parseFloat(user.wagered || user.wager || user.totalWager || user.amount || user.value || user.total_wagered || user.totalAmount || 0) / 100, // Convert from gem cents to gems
           avatar: user.avatar || user.avatarUrl || user.profilePicture || '../bot.png'
         };
         console.log(`Transformed user ${index + 1}:`, result);
@@ -553,7 +556,16 @@
     }
 
     function renderLeaderboard(users, containerId = "dynamic-leaderboard", isOld = false, siteName = "Platform") {
-      const rewards = [125, 75, 50, 30, 15, 5];
+      // Różne nagrody dla różnych platform
+      let rewards;
+      if (siteName.toLowerCase().includes('clash')) {
+        // Nagrody dla Clash.gg (dokładne wartości z leaderboard)
+        rewards = [75, 50, 30, 20, 10, 5, 5, 5]; // Miejsca 1-8
+      } else {
+        // Nagrody dla Rain.gg (oryginalne)
+        rewards = [125, 75, 50, 30, 15, 5];
+      }
+      
       if (!users || users.length === 0) {
         document.getElementById(containerId).innerHTML = `<div class="text-red-400 mt-4">No data for ${siteName}.</div>`;
         return;
@@ -865,7 +877,29 @@
 
     // Obsługa przycisków platformy i czasów
     document.addEventListener("DOMContentLoaded", () => {
-      startRaceTimer("2025-08-15T00:00:00.00Z"); 
+      // Funkcja do aktualizacji timera w zależności od platformy
+      function updateTimerForPlatform(platform) {
+        let endDate;
+        if (platform === 'clash') {
+          // Clash.gg: start 7 sierpnia 2025, trwa 14 dni = koniec 21 sierpnia 2025
+          endDate = "2025-08-21T23:59:59.00Z";
+        } else {
+          // Rain.gg: domyślny czas
+          endDate = "2025-08-15T00:00:00.00Z";
+        }
+        startRaceTimer(endDate);
+      }
+      
+      // Uruchom timer dla domyślnej platformy (Rain.gg)
+      updateTimerForPlatform('rain');
+      
+      // Dodaj nasłuchiwacze dla przycisków platform
+      document.querySelectorAll('.site-selector').forEach(selector => {
+        selector.addEventListener('click', function() {
+          const platform = this.querySelector('img').dataset.platform;
+          updateTimerForPlatform(platform);
+        });
+      }); 
       
       // Auto refresh tylko dla aktualnego leaderboard
       setInterval(() => {
