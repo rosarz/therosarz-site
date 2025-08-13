@@ -445,6 +445,33 @@
       "retina_detect": true
     });
 
+    function transformClashData(clashData) {
+      // Transform Clash.gg API response to match Rain.gg format
+      // This function will need to be adjusted based on actual Clash.gg API response structure
+      
+      if (!clashData || !clashData.users && !clashData.data && !clashData.results) {
+        console.log('No user data found in Clash.gg response');
+        return [];
+      }
+      
+      // Try different possible data structures
+      let users = clashData.users || clashData.data || clashData.results || clashData;
+      
+      if (!Array.isArray(users)) {
+        console.log('Clash.gg data is not an array, attempting to extract users');
+        // If it's an object, try to find array of users
+        if (users.leaderboard) users = users.leaderboard;
+        else if (users.rankings) users = users.rankings;
+        else return [];
+      }
+      
+      return users.map(user => ({
+        username: user.username || user.name || user.user || 'Unknown',
+        wagered: (user.wagered || user.wager || user.totalWager || user.amount || 0) / 100, // Convert from gem cents to gems
+        avatar: user.avatar || user.avatarUrl || '../bot.png'
+      }));
+    }
+
     function startRaceTimer(endDateStr) {
       function pad(n) {
         return n < 10 ? '0' + n : n;
@@ -660,25 +687,45 @@
           endDate: "2025-08-14T00:00:00.00Z",
           code: "therosarz",
           name: "Rain.gg",
-          defaultPrize: "300$"
+          defaultPrize: "300$",
+          apiType: "rain"
         },
         clash: {
           startDate: "2025-08-01T00:00:00.00Z",
           endDate: "2025-08-14T00:00:00.00Z", 
           code: "THEROSARZ",
           name: "Clash.gg",
-          defaultPrize: "200$"
+          defaultPrize: "200$",
+          apiType: "clash"
         }
       };
 
       const config = siteConfigs[siteName] || siteConfigs.rain;
-      const TYPE = "wagered";
-      const url = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&type=${TYPE}&code=${config.code}&site=${siteName}`;
       
       try {
-        const response = await fetch(url);
-        const data = await response.json();
-        console.log(`${config.name} API response:`, data); 
+        let data;
+        
+        if (config.apiType === 'clash') {
+          // Clash.gg API call
+          const response = await fetch('https://clash.gg/api/affiliates/leaderboards/my-leaderboards-api', {
+            headers: {
+              'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoicGFzcyIsInNjb3BlIjoiYWZmaWxpYXRlcyIsInVzZXJJZCI6NTE1ODQzLCJpYXQiOjE3NTUwODU5NjUsImV4cCI6MTkxMjg3Mzk2NX0.oUwuZuACZfow58Pfr__MDfCJTqT1zLsROpyklFdZDIc'
+            }
+          });
+          data = await response.json();
+          console.log(`${config.name} API response:`, data);
+          
+          // Transform Clash.gg data to match our format
+          const transformedResults = transformClashData(data);
+          data = { results: transformedResults };
+        } else {
+          // Rain.gg API call
+          const TYPE = "wagered";
+          const url = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&type=${TYPE}&code=${config.code}&site=${siteName}`;
+          const response = await fetch(url);
+          data = await response.json();
+          console.log(`${config.name} API response:`, data);
+        }
         
         // Update title with prize pool if available
         const prizePool = data.prize_pool || data.prizePool || config.defaultPrize;
@@ -686,6 +733,7 @@
         
         renderLeaderboard(data.results || [], "dynamic-leaderboard", false, config.name);
       } catch (e) {
+        console.error(`Error fetching ${config.name} leaderboard:`, e);
         document.getElementById("dynamic-leaderboard").innerHTML = `<div class="text-red-400 mt-4">Failed to load ${config.name} leaderboard.</div>`;
       }
     }
@@ -698,25 +746,46 @@
           endDate: "2025-07-31T23:59:59.99Z",
           code: "therosarz",
           name: "Rain.gg",
-          defaultPrize: "300$"
+          defaultPrize: "300$",
+          apiType: "rain"
         },
         clash: {
           startDate: "2025-07-24T00:00:00.00Z",
           endDate: "2025-07-31T23:59:59.99Z",
           code: "THEROSARZ",
           name: "Clash.gg",
-          defaultPrize: "200$"
+          defaultPrize: "200$",
+          apiType: "clash"
         }
       };
 
       const config = siteConfigs[siteName] || siteConfigs.rain;
-      const TYPE = "wagered";
-      const url = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&type=${TYPE}&code=${config.code}&site=${siteName}`;
       
       try {
-        const response = await fetch(url);
-        const data = await response.json();
-        console.log(`Previous ${config.name} leaderboard API response:`, data);
+        let data;
+        
+        if (config.apiType === 'clash') {
+          // Clash.gg API call - for previous data we might need to use date parameter
+          const previousDate = '2025-07-24'; // Start date for previous period
+          const response = await fetch(`https://api.clash.gg/affiliates/detailed-summary/v2/${previousDate}`, {
+            headers: {
+              'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoicGFzcyIsInNjb3BlIjoiYWZmaWxpYXRlcyIsInVzZXJJZCI6NTE1ODQzLCJpYXQiOjE3NTUwODU5NjUsImV4cCI6MTkxMjg3Mzk2NX0.oUwuZuACZfow58Pfr__MDfCJTqT1zLsROpyklFdZDIc'
+            }
+          });
+          data = await response.json();
+          console.log(`Previous ${config.name} leaderboard API response:`, data);
+          
+          // Transform Clash.gg data to match our format
+          const transformedResults = transformClashData(data);
+          data = { results: transformedResults };
+        } else {
+          // Rain.gg API call
+          const TYPE = "wagered";
+          const url = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&type=${TYPE}&code=${config.code}&site=${siteName}`;
+          const response = await fetch(url);
+          data = await response.json();
+          console.log(`Previous ${config.name} leaderboard API response:`, data);
+        }
         
         // Update title with prize pool if available
         const prizePool = data.prize_pool || data.prizePool || config.defaultPrize;
@@ -724,6 +793,7 @@
         
         renderLeaderboard(data.results || [], "dynamic-leaderboard", true, config.name);
       } catch (e) {
+        console.error(`Error fetching previous ${config.name} leaderboard:`, e);
         document.getElementById("dynamic-leaderboard").innerHTML = `<div class="text-red-400 mt-4">Failed to load previous ${config.name} leaderboard.</div>`;
       }
     }
