@@ -558,12 +558,15 @@
     function renderLeaderboard(users, containerId = "dynamic-leaderboard", isOld = false, siteName = "Platform") {
       // Różne nagrody dla różnych platform
       let rewards;
+      let coinIcon;
       if (siteName.toLowerCase().includes('clash')) {
         // Nagrody dla Clash.gg (dokładne wartości z leaderboard)
         rewards = [75, 50, 30, 20, 10, 5, 5, 5]; // Miejsca 1-8
+        coinIcon = "../clash_gem.png";
       } else {
         // Nagrody dla Rain.gg (oryginalne)
         rewards = [125, 75, 50, 30, 15, 5];
+        coinIcon = "../coin.png";
       }
       
       if (!users || users.length === 0) {
@@ -589,12 +592,12 @@
               }</div>
               <div class="text-xs text-gray-400 mt-1">wagered</div>
               <div class="font-semibold text-white text-lg flex items-center justify-center gap-1">
-                <img src="../coin.png" alt="coin" class="inline w-5 h-5" />
+                <img src="${coinIcon}" alt="coin" class="inline w-5 h-5" />
                 ${sorted[1].wagered.toFixed(2)}
               </div>
               <div class="text-xs text-gray-400 mt-1">reward</div>
               <div class="font-semibold text-yellow-300 text-base mb-1 flex items-center justify-center gap-1">
-                <img src="../coin.png" alt="coin" class="inline w-5 h-5" />
+                <img src="${coinIcon}" alt="coin" class="inline w-5 h-5" />
                 ${rewards[1]?.toFixed(2) || '-'}
               </div>
             </div>
@@ -613,12 +616,12 @@
               }</div>
               <div class="text-xs text-gray-400 mt-1">wagered</div>
               <div class="font-semibold text-white text-lg flex items-center justify-center gap-1">
-                <img src="../coin.png" alt="coin" class="inline w-5 h-5" />
+                <img src="${coinIcon}" alt="coin" class="inline w-5 h-5" />
                 ${sorted[0].wagered.toFixed(2)}
               </div>
               <div class="text-xs text-gray-400 mt-1">reward</div>
               <div class="font-semibold text-yellow-300 text-base mb-1 flex items-center justify-center gap-1">
-                <img src="../coin.png" alt="coin" class="inline w-5 h-5" />
+                <img src="${coinIcon}" alt="coin" class="inline w-5 h-5" />
                 ${rewards[0]?.toFixed(2) || '-'}
               </div>
             </div>
@@ -637,12 +640,12 @@
               }</div>
               <div class="text-xs text-gray-400 mt-1">wagered</div>
               <div class="font-semibold text-white text-lg flex items-center justify-center gap-1">
-                <img src="../coin.png" alt="coin" class="inline w-5 h-5" />
+                <img src="${coinIcon}" alt="coin" class="inline w-5 h-5" />
                 ${sorted[2].wagered.toFixed(2)}
               </div>
               <div class="text-xs text-gray-400 mt-1">reward</div>
               <div class="font-semibold text-yellow-300 text-base mb-1 flex items-center justify-center gap-1">
-                <img src="../coin.png" alt="coin" class="inline w-5 h-5" />
+                <img src="${coinIcon}" alt="coin" class="inline w-5 h-5" />
                 ${rewards[2]?.toFixed(2) || '-'}
               </div>
             </div>
@@ -681,14 +684,14 @@
             </td>
             <td class="py-3 px-4 text-green-400 font-semibold">
               <div class="flex items-center gap-1">
-                <img src="../coin.png" alt="coin" class="w-5 h-5" />
+                <img src="${coinIcon}" alt="coin" class="w-5 h-5" />
                 ${user.wagered.toFixed(2)}
               </div>
             </td>
             <td class="py-3 px-4 text-yellow-300 font-semibold">
               ${rewards[i] ? `
                 <div class="flex items-center gap-1">
-                  <img src="../coin.png" alt="coin" class="w-5 h-5" />
+                  <img src="${coinIcon}" alt="coin" class="w-5 h-5" />
                   ${rewards[i].toFixed(2)}
                 </div>
               ` : '<span class="text-gray-500">-</span>'}
