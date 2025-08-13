@@ -445,6 +445,51 @@
       "retina_detect": true
     });
 
+    function transformClashData(clashData) {
+      // Transform Clash.gg API response to match Rain.gg format
+      console.log('Raw Clash.gg data:', clashData);
+      
+      if (!clashData) {
+        console.log('No clash data received');
+        return [];
+      }
+      
+      // Try different possible data structures from Clash.gg leaderboard API
+      let users = clashData.leaderboard || clashData.users || clashData.data || clashData.results || clashData.rankings || clashData;
+      
+      // If it's still an object, try to find the leaderboard array
+      if (!Array.isArray(users)) {
+        console.log('Data is not array, trying to find user list in:', Object.keys(users));
+        
+        // Try common field names
+        if (users.entries) users = users.entries;
+        else if (users.participants) users = users.participants;
+        else if (users.players) users = users.players;
+        else if (users.items) users = users.items;
+        else {
+          console.log('Could not find user array in Clash.gg response');
+          return [];
+        }
+      }
+      
+      if (!Array.isArray(users)) {
+        console.log('Still not an array after transformation attempts');
+        return [];
+      }
+      
+      console.log(`Found ${users.length} users in Clash.gg data`);
+      
+      return users.map((user, index) => {
+        const result = {
+          username: user.username || user.name || user.user || user.displayName || `User ${index + 1}`,
+          wagered: parseFloat(user.wagered || user.wager || user.totalWager || user.amount || user.value || 0) / 100, // Convert from gem cents to gems
+          avatar: user.avatar || user.avatarUrl || user.profilePicture || '../bot.png'
+        };
+        console.log(`Transformed user ${index + 1}:`, result);
+        return result;
+      });
+    }
+
     function startRaceTimer(endDateStr) {
       function pad(n) {
         return n < 10 ? '0' + n : n;
@@ -664,12 +709,13 @@
           apiType: "rain"
         },
         clash: {
-          startDate: "2025-08-01T00:00:00.00Z",
-          endDate: "2025-08-14T00:00:00.00Z", 
+          startDate: "2025-08-07T00:00:00.00Z",
+          endDate: "2025-08-21T00:00:00.00Z", 
           code: "THEROSARZ",
           name: "Clash.gg",
           defaultPrize: "200$",
-          apiType: "clash"
+          apiType: "clash",
+          leaderboardId: "517"
         }
       };
 
@@ -679,8 +725,8 @@
         let data;
         
         if (config.apiType === 'clash') {
-          // Clash.gg API call
-          const response = await fetch('https://clash.gg/api/affiliates/leaderboards/my-leaderboards-api', {
+          // Clash.gg API call with specific leaderboard ID
+          const response = await fetch(`https://clash.gg/api/affiliates/leaderboards/${config.leaderboardId}`, {
             headers: {
               'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoicGFzcyIsInNjb3BlIjoiYWZmaWxpYXRlcyIsInVzZXJJZCI6NTE1ODQzLCJpYXQiOjE3NTUwODU5NjUsImV4cCI6MTkxMjg3Mzk2NX0.oUwuZuACZfow58Pfr__MDfCJTqT1zLsROpyklFdZDIc'
             }
@@ -728,7 +774,8 @@
           code: "THEROSARZ",
           name: "Clash.gg",
           defaultPrize: "200$",
-          apiType: "clash"
+          apiType: "clash",
+          leaderboardId: "517"
         }
       };
 
@@ -738,9 +785,8 @@
         let data;
         
         if (config.apiType === 'clash') {
-          // Clash.gg API call - for previous data we might need to use date parameter
-          const previousDate = '2025-08-07'; // Start date for previous period
-          const response = await fetch(`https://api.clash.gg/affiliates/detailed-summary/v2/${previousDate}`, {
+          // Clash.gg API call with specific leaderboard ID (previous data might be same endpoint)
+          const response = await fetch(`https://clash.gg/api/affiliates/leaderboards/${config.leaderboardId}`, {
             headers: {
               'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoicGFzcyIsInNjb3BlIjoiYWZmaWxpYXRlcyIsInVzZXJJZCI6NTE1ODQzLCJpYXQiOjE3NTUwODU5NjUsImV4cCI6MTkxMjg3Mzk2NX0.oUwuZuACZfow58Pfr__MDfCJTqT1zLsROpyklFdZDIc'
             }
