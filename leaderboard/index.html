@@ -293,13 +293,6 @@
           </div>
         </div>
         
-        <!-- DEBUG: Test button for Clash.gg token -->
-        <div class="flex justify-center mb-4">
-          <button id="test-clash-token" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-clash-medium">
-            🧪 Test Clash.gg Token
-          </button>
-        </div>
-        
         <!-- Leaderboard -->
         <h2 id="leaderboard-title" class="text-4xl font-clash-bold text-center mb-8 bg-gradient-to-r from-yellow-400 via-pink-500 to-blue-500 bg-clip-text text-transparent">🏆 Leaderboard</h2>
         
@@ -637,7 +630,16 @@
       return transformedUsers;
     }
 
+    // Global timer variable to clear previous intervals
+    let raceTimerInterval = null;
+
     function startRaceTimer(endDateStr) {
+      // Clear previous timer if exists
+      if (raceTimerInterval) {
+        clearInterval(raceTimerInterval);
+        raceTimerInterval = null;
+      }
+      
       function pad(n) {
         return n < 10 ? '0' + n : n;
       }
@@ -647,6 +649,10 @@
         const diff = endDate - now;
         if (diff <= 0) {
           document.getElementById("race-timer").textContent = "Leaderboard ended!";
+          if (raceTimerInterval) {
+            clearInterval(raceTimerInterval);
+            raceTimerInterval = null;
+          }
           return;
         }
         const days = pad(Math.floor(diff / (1000 * 60 * 60 * 24)));
@@ -657,7 +663,7 @@
           `Time left: ${days}:${hours}:${minutes}:${seconds}`;
       }
       updateTimer();
-      setInterval(updateTimer, 1000); // aktualizuj co sekundę
+      raceTimerInterval = setInterval(updateTimer, 1000); // aktualizuj co sekundę
     }
 
     function updateBonusLadder(users) {
@@ -1071,6 +1077,19 @@
         selector.addEventListener('click', function() {
           const platform = this.querySelector('img').dataset.platform;
           updateTimerForPlatform(platform);
+          
+          // Ukryj/Pokaż bonus panel w zależności od platformy
+          if (platform === 'clash') {
+            // Ukryj panel dla Clash.gg
+            hideBonusPanel();
+            bonusToggleBtn.style.display = 'none';
+          } else {
+            // Pokaż panel dla Rain.gg
+            bonusToggleBtn.style.display = 'block';
+            setTimeout(() => {
+              showBonusPanel();
+            }, 100);
+          }
         });
       }); 
       
@@ -1113,12 +1132,6 @@
       // Klik w zawartość panelu zamyka panel
       bonusPanel.addEventListener('click', function() {
         hideBonusPanel();
-      });
-      
-      // DEBUG: Test Clash.gg token button
-      document.getElementById('test-clash-token').addEventListener('click', function() {
-        console.log('🧪 Testing Clash.gg token...');
-        testClashToken();
       });
       
       // Auto refresh tylko dla aktualnego leaderboard
