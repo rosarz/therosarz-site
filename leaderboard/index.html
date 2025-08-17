@@ -317,18 +317,18 @@
             </div>
           </div>
 
-          <!-- Przycisk BONUS REWARDS (Fixed na prawej krawędzi) -->
-          <button id="bonus-toggle-btn" class="fixed top-1/2 right-0 transform -translate-y-1/2 bg-gradient-to-b from-purple-600 to-blue-600 text-white px-2 py-12 rounded-l-xl border border-r-0 border-purple-500/40 shadow-2xl z-50 font-clash-bold text-xs hover:from-purple-500 hover:to-blue-500 transition-all duration-300 backdrop-blur-md">
-            <div class="transform -rotate-90 whitespace-nowrap">💰 BONUS REWARDS</div>
+          <!-- Przycisk BONUS REWARDS (Przyczepiony do panelu, pionowy) -->
+          <button id="bonus-toggle-btn" class="fixed top-1/2 right-80 transform -translate-y-1/2 bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 px-2 rounded-l-lg border border-r-0 border-purple-500/40 shadow-2xl z-50 font-clash-bold text-xs hover:from-purple-500 hover:to-blue-500 transition-all duration-300 backdrop-blur-md writing-vertical">
+            <div class="whitespace-nowrap">💰<br/>B<br/>O<br/>N<br/>U<br/>S<br/><br/>R<br/>E<br/>W<br/>A<br/>R<br/>D<br/>S</div>
           </button>
 
-          <!-- Bonus Information Sidebar (Widoczny domyślnie) -->
-          <div id="bonus-panel" class="fixed top-0 right-0 w-80 h-full bg-gradient-to-b from-purple-900/95 to-blue-900/95 backdrop-blur-md shadow-2xl z-40 transition-transform duration-300 ease-in-out border-l border-purple-500/40">
+          <!-- Bonus Information Panel (Floating panel z prawej strony) -->
+          <div id="bonus-panel" class="fixed top-0 right-0 w-96 h-full bg-gradient-to-b from-purple-900/95 to-blue-900/95 backdrop-blur-md shadow-2xl border-l border-purple-500/40 z-40 transition-transform duration-300 ease-in-out translate-x-full">
             <div class="p-6 h-full overflow-y-auto">
               <!-- Przycisk zamknij -->
               <div class="flex justify-between items-center mb-6">
                 <h3 class="text-lg font-clash-bold text-yellow-400">💰 BONUS REWARDS</h3>
-                <button id="bonus-close-btn" class="text-white hover:text-red-400 text-xl transition-colors duration-200">×</button>
+                <button id="bonus-close-btn" class="text-white hover:text-red-400 text-2xl transition-colors duration-200 font-clash-bold">×</button>
               </div>
               
               <!-- Bonus Ladder -->
@@ -931,27 +931,45 @@
         });
       }); 
       
-      // Obsługa toggle panelu BONUS REWARDS
+      // Obsługa toggle panelu BONUS REWARDS (zwykły panel)
       const bonusToggleBtn = document.getElementById('bonus-toggle-btn');
       const bonusCloseBtn = document.getElementById('bonus-close-btn');
       const bonusPanel = document.getElementById('bonus-panel');
       
-      // Toggle - pokaż gdy ukryty, schowaj gdy widoczny
+      // Funkcja do pokazania panelu
+      function showBonusPanel() {
+        bonusPanel.classList.remove('translate-x-full');
+        bonusToggleBtn.style.right = '384px'; // Przesunięcie przycisku (w-96 = 384px)
+      }
+      
+      // Funkcja do schowania panelu
+      function hideBonusPanel() {
+        bonusPanel.classList.add('translate-x-full');
+        bonusToggleBtn.style.right = '0px'; // Przycisk wraca do krawędzi
+      }
+      
+      // Panel domyślnie widoczny
+      setTimeout(() => {
+        showBonusPanel();
+      }, 100);
+      
+      // Toggle przycisk
       bonusToggleBtn.addEventListener('click', function() {
         if (bonusPanel.classList.contains('translate-x-full')) {
-          bonusPanel.classList.remove('translate-x-full');
+          showBonusPanel();
         } else {
-          bonusPanel.classList.add('translate-x-full');
+          hideBonusPanel();
         }
       });
       
+      // Przycisk zamknij
       bonusCloseBtn.addEventListener('click', function() {
-        bonusPanel.classList.add('translate-x-full');
+        hideBonusPanel();
       });
       
-      // Schowaj panel po kliknięciu w dowolne miejsce wewnątrz panelu
-      bonusPanel.querySelector('.p-6').addEventListener('click', function() {
-        bonusPanel.classList.add('translate-x-full');
+      // Klik w zawartość panelu zamyka panel
+      bonusPanel.addEventListener('click', function() {
+        hideBonusPanel();
       });
       
       // Auto refresh tylko dla aktualnego leaderboard
