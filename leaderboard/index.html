@@ -557,6 +557,14 @@
       console.log('🔍 Users after initial extraction:', users);
       console.log('🔍 Users type:', typeof users, 'IsArray:', Array.isArray(users));
       
+      // Special handling for Clash.gg API structure where data contains leaderboard objects
+      if (Array.isArray(users) && users.length > 0 && users[0].topPlayers) {
+        console.log('🔍 Found Clash.gg leaderboard structure with topPlayers');
+        console.log('📋 Leaderboard object:', users[0]);
+        users = users[0].topPlayers; // Extract topPlayers from first leaderboard
+        console.log('✅ Extracted topPlayers:', users);
+      }
+      
       // If it's still an object, try to find the leaderboard array
       if (!Array.isArray(users)) {
         console.log('⚠️ Data is not array, exploring deeper...');
@@ -604,14 +612,14 @@
         console.log(`🔑 Available user fields:`, Object.keys(user));
         
         // Try multiple field variations for each property
-        const username = user.username || user.name || user.user || user.displayName || user.player_name || user.nick || user.handle || `User ${index + 1}`;
+        const username = user.username || user.name || user.user || user.displayName || user.player_name || user.nick || user.handle || user.playerName || user.userId || `User ${index + 1}`;
         
-        // Try multiple variations for wagered amount
-        const rawWagered = user.wagered || user.wager || user.totalWager || user.amount || user.value || user.total_wagered || user.totalAmount || user.wager_amount || user.bet_amount || user.volume || 0;
+        // Try multiple variations for wagered amount - Clash.gg might use different field names
+        const rawWagered = user.wagered || user.wager || user.totalWager || user.amount || user.value || user.total_wagered || user.totalAmount || user.wager_amount || user.bet_amount || user.volume || user.totalWagered || user.wagerAmount || user.totalVolume || 0;
         const wagered = parseFloat(rawWagered) / 100; // Convert from gem cents to gems
         
         // Try multiple variations for avatar
-        const avatar = user.avatar || user.avatarUrl || user.profilePicture || user.profile_picture || user.image || '../bot.png';
+        const avatar = user.avatar || user.avatarUrl || user.profilePicture || user.profile_picture || user.image || user.profileImage || '../bot.png';
         
         const result = {
           username,
