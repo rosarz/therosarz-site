@@ -272,7 +272,7 @@
           <span class="text-xl font-clash-bold">therosarz</span>
         </a>
       </div>
-      <div class="flex gap-6 text-lg font-semibold">
+      <div class="flex gap-6 text-lg font-clash-medium">
         <a href="/bonuses" class="hover:text-yellow-400 transition">🎁 Bonuses</a>
         <a href="/leaderboard" class="hover:text-yellow-400 transition">🏆 Leaderboard</a>
         <a href="/youtube" class="hover:text-yellow-400 transition">📺 YouTube</a>
@@ -311,7 +311,7 @@
                   </button>
                 </div>
                 
-                <div id="race-timer" class="text-center text-lg text-cyan-400 font-bold mb-8 bg-black bg-opacity-50 px-6 py-3 rounded-lg border border-cyan-400"></div>
+                <div id="race-timer" class="text-center text-lg text-cyan-400 font-clash-bold mb-8 bg-black bg-opacity-50 px-6 py-3 rounded-lg border border-cyan-400"></div>
               </div>
               <div id="dynamic-leaderboard"></div>
             </div>
@@ -366,9 +366,9 @@
     <footer class="bg-black bg-opacity-70 text-sm text-center py-6 mt-10 px-4 leading-relaxed">
       <p class="mb-2">🎲 Do not get it twisted, do not gamble. Do not start gambling. Gambling is entertainment and entertainment only. You won't break even, you won't win.</p>
       <p class="mb-2">I am not responsible for any losses on casinos linked or promoted on this site.</p>
-      <p class="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-semibold">Made by therosarz</p>
+      <p class="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-clash-medium">Made by therosarz</p>
       <p class="mt-4">
-        <p class="text-cyan-300 font-semibold mb-2">Socials</p>
+        <p class="text-cyan-300 font-clash-semibold mb-2">Socials</p>
         <a href="https://x.com/therosarz" target="_blank" class="text-blue-400 hover:text-blue-300 transition">X</a> |
         <a href="https://kick.com/therosarz" target="_blank" class="text-green-400 hover:text-green-300 transition">Kick</a> |
         <a href="https://discord.gg/CW2X5Km8cj" target="_blank" class="text-purple-400 hover:text-purple-300 transition">Discord</a>
@@ -566,11 +566,11 @@
         ladderHTML += `
           <div class="p-2 bg-gray-800/60 rounded border-l-4 border-yellow-400/50">
             <div class="flex justify-between items-center mb-1">
-              <span class="font-medium text-white text-sm">${level.threshold} coins</span>
-              <span class="text-yellow-300 font-bold text-sm">+${level.bonus}</span>
+              <span class="font-clash-medium text-white text-sm">${level.threshold} coins</span>
+              <span class="text-yellow-300 font-clash-bold text-sm">+${level.bonus}</span>
             </div>
             <div class="flex justify-between items-center">
-              <span class="text-cyan-300 font-semibold text-xs">${count}/${level.maxCount}</span>
+              <span class="text-cyan-300 font-clash-medium text-xs">${count}/${level.maxCount}</span>
               <span class="text-gray-300 text-xs">[${usernames.join(', ') || 'none'}]</span>
             </div>
           </div>
@@ -609,7 +609,7 @@
             <div class="podium-card second flex flex-col items-center w-44 border-2 border-gray-600 rounded-xl shadow-lg bg-[#1a1a1a] mb-0">
               <div class="text-4xl mb-1">🥈</div>
               <img src="${sorted[1].avatar || '../bot.png'}" class="w-16 h-16 rounded-full border border-gray-700 my-1" alt="avatar">
-              <div class="font-bold text-base text-center truncate">${
+              <div class="font-clash-semibold text-base text-center truncate">${
                 (() => {
                   let nick = sorted[1].username || '';
                   let visible = nick.slice(0, 2);
@@ -618,12 +618,12 @@
                 })()
               }</div>
               <div class="text-xs text-gray-400 mt-1">wagered</div>
-              <div class="font-semibold text-white text-lg flex items-center justify-center gap-1">
+              <div class="font-clash-semibold text-white text-lg flex items-center justify-center gap-1">
                 <img src="${coinIcon}" alt="coin" class="inline w-5 h-5" />
                 ${sorted[1].wagered.toFixed(2)}
               </div>
               <div class="text-xs text-gray-400 mt-1">reward</div>
-              <div class="font-semibold text-yellow-300 text-base mb-1 flex items-center justify-center gap-1">
+              <div class="font-clash-semibold text-yellow-300 text-base mb-1 flex items-center justify-center gap-1">
                 <img src="${coinIcon}" alt="coin" class="inline w-5 h-5" />
                 ${rewards[1]?.toFixed(2) || '-'}
               </div>
@@ -633,7 +633,7 @@
             <div class="podium-card first flex flex-col items-center w-48 border-2 border-yellow-400 rounded-xl shadow-xl bg-[#1a1a1a] -mb-6 z-10 scale-105">
               <div class="text-5xl mb-1">🥇</div>
               <img src="${sorted[0].avatar || '../bot.png'}" class="w-20 h-20 rounded-full border border-gray-700 my-1" alt="avatar">
-              <div class="font-bold text-lg text-center truncate">${
+              <div class="font-clash-bold text-lg text-center truncate">${
                 (() => {
                   let nick = sorted[0].username || '';
                   let visible = nick.slice(0, 2);
@@ -642,12 +642,12 @@
                 })()
               }</div>
               <div class="text-xs text-gray-400 mt-1">wagered</div>
-              <div class="font-semibold text-white text-lg flex items-center justify-center gap-1">
+              <div class="font-clash-semibold text-white text-lg flex items-center justify-center gap-1">
                 <img src="${coinIcon}" alt="coin" class="inline w-5 h-5" />
                 ${sorted[0].wagered.toFixed(2)}
               </div>
               <div class="text-xs text-gray-400 mt-1">reward</div>
-              <div class="font-semibold text-yellow-300 text-base mb-1 flex items-center justify-center gap-1">
+              <div class="font-clash-semibold text-yellow-300 text-base mb-1 flex items-center justify-center gap-1">
                 <img src="${coinIcon}" alt="coin" class="inline w-5 h-5" />
                 ${rewards[0]?.toFixed(2) || '-'}
               </div>
@@ -657,7 +657,7 @@
             <div class="podium-card third flex flex-col items-center w-44 border-2 border-gray-600 rounded-xl shadow-lg bg-[#1a1a1a] mb-0">
               <div class="text-4xl mb-1">🥉</div>
               <img src="${sorted[2].avatar || '../bot.png'}" class="w-16 h-16 rounded-full border border-gray-700 my-1" alt="avatar">
-              <div class="font-bold text-base text-center truncate">${
+              <div class="font-clash-semibold text-base text-center truncate">${
                 (() => {
                   let nick = sorted[2].username || '';
                   let visible = nick.slice(0, 2);
@@ -666,12 +666,12 @@
                 })()
               }</div>
               <div class="text-xs text-gray-400 mt-1">wagered</div>
-              <div class="font-semibold text-white text-lg flex items-center justify-center gap-1">
+              <div class="font-clash-semibold text-white text-lg flex items-center justify-center gap-1">
                 <img src="${coinIcon}" alt="coin" class="inline w-5 h-5" />
                 ${sorted[2].wagered.toFixed(2)}
               </div>
               <div class="text-xs text-gray-400 mt-1">reward</div>
-              <div class="font-semibold text-yellow-300 text-base mb-1 flex items-center justify-center gap-1">
+              <div class="font-clash-semibold text-yellow-300 text-base mb-1 flex items-center justify-center gap-1">
                 <img src="${coinIcon}" alt="coin" class="inline w-5 h-5" />
                 ${rewards[2]?.toFixed(2) || '-'}
               </div>
@@ -685,10 +685,10 @@
           <table class="min-w-full text-left text-gray-200 bg-black bg-opacity-30 rounded-lg border-separate border-spacing-0">
             <thead class="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
               <tr>
-                <th class="py-4 px-4 font-bold text-center rounded-tl-lg">#</th>
-                <th class="py-4 px-4 font-bold">User</th>
-                <th class="py-4 px-4 font-bold">Wager</th>
-                <th class="py-4 px-4 font-bold rounded-tr-lg">Reward</th>
+                <th class="py-4 px-4 font-clash-bold text-center rounded-tl-lg">#</th>
+                <th class="py-4 px-4 font-clash-bold">User</th>
+                <th class="py-4 px-4 font-clash-bold">Wager</th>
+                <th class="py-4 px-4 font-clash-bold rounded-tr-lg">Reward</th>
               </tr>
             </thead>
             <tbody>
@@ -702,20 +702,20 @@
 
         tableHTML += `
           <tr class="bg-gray-800 bg-opacity-70 border-b border-gray-700 hover:bg-opacity-90">
-            <td class="py-3 px-4 font-bold text-center">${i + 1}</td>
+            <td class="py-3 px-4 font-clash-bold text-center">${i + 1}</td>
             <td class="py-3 px-4">
               <div class="flex items-center gap-2">
                 <img src="${user.avatar || '../bot.png'}" class="w-8 h-8 rounded-full" alt="avatar">
                 <span class="truncate max-w-xs">${anonymized}</span>
               </div>
             </td>
-            <td class="py-3 px-4 text-green-400 font-semibold">
+            <td class="py-3 px-4 text-green-400 font-clash-medium">
               <div class="flex items-center gap-1">
                 <img src="${coinIcon}" alt="coin" class="w-5 h-5" />
                 ${user.wagered.toFixed(2)}
               </div>
             </td>
-            <td class="py-3 px-4 text-yellow-300 font-semibold">
+            <td class="py-3 px-4 text-yellow-300 font-clash-medium">
               ${rewards[i] ? `
                 <div class="flex items-center gap-1">
                   <img src="${coinIcon}" alt="coin" class="w-5 h-5" />
