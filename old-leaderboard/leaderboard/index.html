@@ -7,9 +7,10 @@
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/clash-display.css">
   <style>
     body {
-      font-family: 'Satoshi', 'Inter', Arial, sans-serif;
+      font-family: 'ClashDisplay-Regular', 'Satoshi', 'Inter', Arial, sans-serif;
       overflow-x: hidden;
       display: flex;
       flex-direction: column;
@@ -44,6 +45,24 @@
       height: 32px;
       border-radius: 50%;
     }
+    
+    /* Clash Display font variations */
+    .font-clash-light {
+      font-family: 'ClashDisplay-Light', sans-serif;
+    }
+    .font-clash-regular {
+      font-family: 'ClashDisplay-Regular', sans-serif;
+    }
+    .font-clash-medium {
+      font-family: 'ClashDisplay-Medium', sans-serif;
+    }
+    .font-clash-semibold {
+      font-family: 'ClashDisplay-Semibold', sans-serif;
+    }
+    .font-clash-bold {
+      font-family: 'ClashDisplay-Bold', sans-serif;
+    }
+    
   </style>
 </head>
 
@@ -55,7 +74,7 @@
       <div class="flex items-center">
         <a href="/" class="logo-link">
           <img src="favicon.ico" alt="Avatar" class="logo-img">
-          <span class="text-xl font-bold">therosarz</span>
+          <span class="text-xl font-clash-bold">therosarz</span>
         </a>
       </div>
       <div class="flex gap-6 text-lg font-semibold">
@@ -67,7 +86,7 @@
 
     <main class="max-w-6xl mx-auto px-4 py-12">
       <section id="leaderboard" class="space-y-12">
-        <h2 class="text-4xl font-bold text-center mb-8">🏆 Gloves Leaderboard</h2>
+        <h2 class="text-4xl font-clash-bold text-center mb-8">🏆 Gloves Leaderboard</h2>
         <div id="leaderboard-content" class="bg-gray-900 bg-opacity-70 p-6 rounded-lg shadow-lg">
           <h3 class="text-2xl font-bold mb-4 text-yellow-400">Leaderboard</h3>
           <p class="text-lg mb-8">Leaderboard contains <span class="text-yellow-400 font-semibold">Rain.gg</span> wager for giveaway period.</p>

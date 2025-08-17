@@ -7,9 +7,10 @@
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/clash-display.css">
   <style>
     body {
-      font-family: 'Satoshi', 'Inter', Arial, sans-serif;
+      font-family: 'ClashDisplay-Regular', 'Satoshi', 'Inter', Arial, sans-serif;
       overflow-x: hidden;
       display: flex;
       flex-direction: column;
@@ -74,6 +75,23 @@
       transform: translateY(-2px);
       color: #ffd700;
       text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    }
+    
+    /* Clash Display font variations */
+    .font-clash-light {
+      font-family: 'ClashDisplay-Light', sans-serif;
+    }
+    .font-clash-regular {
+      font-family: 'ClashDisplay-Regular', sans-serif;
+    }
+    .font-clash-medium {
+      font-family: 'ClashDisplay-Medium', sans-serif;
+    }
+    .font-clash-semibold {
+      font-family: 'ClashDisplay-Semibold', sans-serif;
+    }
+    .font-clash-bold {
+      font-family: 'ClashDisplay-Bold', sans-serif;
     }
     
     /* Kolorowe karty */
@@ -156,7 +174,7 @@
       <div class="flex items-center">
         <a href="/" class="logo-link">
           <img src="favicon.ico" alt="Avatar" class="logo-img">
-          <span class="text-xl font-bold">therosarz</span>
+          <span class="text-xl font-clash-bold">therosarz</span>
         </a>
       </div>
       <div class="flex gap-6 text-lg font-semibold">
@@ -169,30 +187,30 @@
     <!-- Główna zawartość -->
     <main class="max-w-6xl mx-auto px-4 py-12 text-center space-y-20">
       <section class="pt-20">
-        <h1 class="text-5xl font-bold mb-6 bg-gradient-to-r from-yellow-400 via-pink-500 to-blue-500 bg-clip-text text-transparent">Welcome to <span class="rainbow-text">therosarz</span> hole</h1>
+        <h1 class="text-5xl font-clash-bold mb-6 bg-gradient-to-r from-yellow-400 via-pink-500 to-blue-500 bg-clip-text text-transparent">Welcome to <span class="rainbow-text">therosarz</span> hole</h1>
         <p class="text-xl max-w-2xl mx-auto bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">Your central place for bonuses, leaderboards and gaming content</p>
       </section>
       
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
         <a href="/bonuses" class="colorful-card p-6 rounded-lg shadow-lg hover:scale-105 group pulsing-glow">
-          <h2 class="text-2xl font-bold mb-3 text-yellow-400 group-hover:text-yellow-300 transition">🎁 Bonuses</h2>
+          <h2 class="text-2xl font-clash-semibold mb-3 text-yellow-400 group-hover:text-yellow-300 transition">🎁 Bonuses</h2>
           <p class="group-hover:text-gray-200 transition">Get exclusive bonus codes and promotions</p>
         </a>
         
         <a href="/leaderboard" class="colorful-card p-6 rounded-lg shadow-lg hover:scale-105 group pulsing-glow">
-          <h2 class="text-2xl font-bold mb-3 text-yellow-400 group-hover:text-yellow-300 transition">🏆 Leaderboard</h2>
+          <h2 class="text-2xl font-clash-semibold mb-3 text-yellow-400 group-hover:text-yellow-300 transition">🏆 Leaderboard</h2>
           <p class="group-hover:text-gray-200 transition">Check the current rankings for Gloves giveaway</p>
         </a>
         
         <a href="/youtube" class="colorful-card p-6 rounded-lg shadow-lg hover:scale-105 group pulsing-glow">
-          <h2 class="text-2xl font-bold mb-3 text-yellow-400 group-hover:text-yellow-300 transition">📺 YouTube</h2>
+          <h2 class="text-2xl font-clash-semibold mb-3 text-yellow-400 group-hover:text-yellow-300 transition">📺 YouTube</h2>
           <p class="group-hover:text-gray-200 transition">Watch the latest videos</p>
         </a>
       </div>
 
       <!-- Social Media Section -->
       <section class="text-center space-y-8">
-        <h2 class="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 bg-clip-text text-transparent">🌐 Socials</h2>
+        <h2 class="text-4xl font-clash-bold mb-4 bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 bg-clip-text text-transparent">🌐 Socials</h2>
         <p class="text-lg mb-6 bg-gradient-to-r from-blue-400 to-green-400 bg-clip-text text-transparent">Follow me on social media</p>
         <div class="flex justify-center gap-6">
           <a href="https://x.com/therosarz" target="_blank" class="colorful-card flex items-center gap-2 p-4 rounded-lg hover:scale-110 transition">

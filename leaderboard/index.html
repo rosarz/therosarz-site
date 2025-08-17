@@ -7,9 +7,10 @@
   <link rel="icon" href="../favicon.ico" type="image/x-icon" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/clash-display.css">
   <style>
     body {
-      font-family: 'Satoshi', 'Inter', Arial, sans-serif;
+      font-family: 'ClashDisplay-Regular', 'Satoshi', 'Inter', Arial, sans-serif;
       overflow-x: hidden;
       display: flex;
       flex-direction: column;
@@ -74,6 +75,23 @@
       transform: translateY(-2px);
       color: #ffd700;
       text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    }
+    
+    /* Clash Display font variations */
+    .font-clash-light {
+      font-family: 'ClashDisplay-Light', sans-serif;
+    }
+    .font-clash-regular {
+      font-family: 'ClashDisplay-Regular', sans-serif;
+    }
+    .font-clash-medium {
+      font-family: 'ClashDisplay-Medium', sans-serif;
+    }
+    .font-clash-semibold {
+      font-family: 'ClashDisplay-Semibold', sans-serif;
+    }
+    .font-clash-bold {
+      font-family: 'ClashDisplay-Bold', sans-serif;
     }
     
     /* Kolorowe karty */
@@ -251,7 +269,7 @@
       <div class="flex items-center">
         <a href="/" class="logo-link">
           <img src="../favicon.ico" alt="Avatar" class="logo-img">
-          <span class="text-xl font-bold">therosarz</span>
+          <span class="text-xl font-clash-bold">therosarz</span>
         </a>
       </div>
       <div class="flex gap-6 text-lg font-semibold">
@@ -276,7 +294,7 @@
         </div>
         
         <!-- Leaderboard -->
-        <h2 id="leaderboard-title" class="text-4xl font-bold text-center mb-8 bg-gradient-to-r from-yellow-400 via-pink-500 to-blue-500 bg-clip-text text-transparent">🏆 Leaderboard</h2>
+        <h2 id="leaderboard-title" class="text-4xl font-clash-bold text-center mb-8 bg-gradient-to-r from-yellow-400 via-pink-500 to-blue-500 bg-clip-text text-transparent">🏆 Leaderboard</h2>
         
         <div class="flex justify-center">
           <div class="w-full max-w-5xl">
@@ -285,10 +303,10 @@
               <div class="flex flex-col items-center">
                 <!-- Current/Previous Buttons -->
                 <div class="mb-6 flex justify-center gap-4">
-                  <button id="current-btn" class="active px-6 py-3 gradient-button text-white rounded-lg font-semibold shadow-lg transition-all duration-300">
+                  <button id="current-btn" class="active px-6 py-3 gradient-button text-white rounded-lg font-clash-medium shadow-lg transition-all duration-300">
                     Current Leaderboard
                   </button>
-                  <button id="previous-btn" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-semibold shadow-lg transition-all duration-300">
+                  <button id="previous-btn" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-clash-medium shadow-lg transition-all duration-300">
                     Previous Leaderboard
                   </button>
                 </div>
@@ -299,14 +317,23 @@
             </div>
           </div>
 
-          <!-- Bonus Information Sidebar (Fixed Right) -->
-          <div class="fixed top-24 right-16 w-72 z-40">
-            <div class="p-6 bg-gradient-to-b from-purple-900/40 to-blue-900/40 rounded-xl border border-purple-500/40 backdrop-blur-md shadow-2xl">
-              <h3 class="text-lg font-bold text-center mb-5 text-yellow-400">💰 BONUS REWARDS</h3>
+          <!-- Przycisk BONUS REWARDS (Fixed na prawej krawędzi) -->
+          <button id="bonus-toggle-btn" class="fixed top-1/2 right-0 transform -translate-y-1/2 bg-gradient-to-b from-purple-600 to-blue-600 text-white px-4 py-8 rounded-l-xl border border-r-0 border-purple-500/40 shadow-2xl z-50 font-clash-bold text-sm hover:from-purple-500 hover:to-blue-500 transition-all duration-300 backdrop-blur-md">
+            <div class="transform -rotate-90 whitespace-nowrap">💰 BONUS REWARDS</div>
+          </button>
+
+          <!-- Bonus Information Sidebar (Wysuwany panel) -->
+          <div id="bonus-panel" class="fixed top-0 right-0 w-80 h-full bg-gradient-to-b from-purple-900/95 to-blue-900/95 backdrop-blur-md shadow-2xl z-40 transform translate-x-full transition-transform duration-300 ease-in-out border-l border-purple-500/40">
+            <div class="p-6 h-full overflow-y-auto">
+              <!-- Przycisk zamknij -->
+              <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-clash-bold text-yellow-400">💰 BONUS REWARDS</h3>
+                <button id="bonus-close-btn" class="text-white hover:text-red-400 text-xl transition-colors duration-200">×</button>
+              </div>
               
               <!-- Bonus Ladder -->
               <div class="mb-5 p-4 bg-black/50 rounded-lg border border-yellow-500/40">
-                <h4 class="text-base font-bold mb-3 text-green-400">🪜 BONUS LADDER</h4>
+                <h4 class="text-base font-clash-semibold mb-3 text-green-400">🪜 BONUS LADDER</h4>
                 <div id="bonus-ladder-content" class="space-y-2 text-sm">
                   <!-- Content will be populated by JavaScript -->
                 </div>
@@ -314,19 +341,19 @@
 
               <!-- Wager Boost -->
               <div class="mb-5 p-4 bg-black/50 rounded-lg border border-blue-500/40">
-                <h4 class="text-base font-bold mb-3 text-blue-400">🚀 WAGER BOOST</h4>
+                <h4 class="text-base font-clash-semibold mb-3 text-blue-400">🚀 WAGER BOOST</h4>
                 <div class="bg-gradient-to-r from-blue-600/30 to-purple-600/30 p-3 rounded-lg text-center">
-                  <div class="text-sm font-bold text-white">Every 1,000 coins</div>
-                  <div class="text-lg font-bold text-blue-300 mt-1">+12 bonus</div>
+                  <div class="text-sm font-clash-medium text-white">Every 1,000 coins</div>
+                  <div class="text-lg font-clash-bold text-blue-300 mt-1">+12 bonus</div>
                 </div>
               </div>
 
               <!-- Cashback Bonus -->
               <div class="p-4 bg-black/50 rounded-lg border border-pink-500/40">
-                <h4 class="text-base font-bold mb-3 text-pink-400">💸 CASHBACK</h4>
+                <h4 class="text-base font-clash-semibold mb-3 text-pink-400">💸 CASHBACK</h4>
                 <div class="bg-gradient-to-r from-pink-600/30 to-red-600/30 p-3 rounded-lg text-center">
-                  <div class="text-sm font-bold text-white">Full commission</div>
-                  <div class="text-sm text-pink-300 mt-1">cashback</div>
+                  <div class="text-sm font-clash-medium text-white">Full commission</div>
+                  <div class="text-sm font-clash-medium text-pink-300 mt-1">cashback</div>
                 </div>
               </div>
             </div>
@@ -903,6 +930,29 @@
           updateTimerForPlatform(platform);
         });
       }); 
+      
+      // Obsługa wysuwania panelu BONUS REWARDS
+      const bonusToggleBtn = document.getElementById('bonus-toggle-btn');
+      const bonusCloseBtn = document.getElementById('bonus-close-btn');
+      const bonusPanel = document.getElementById('bonus-panel');
+      
+      bonusToggleBtn.addEventListener('click', function() {
+        bonusPanel.classList.remove('translate-x-full');
+        bonusPanel.classList.add('translate-x-0');
+      });
+      
+      bonusCloseBtn.addEventListener('click', function() {
+        bonusPanel.classList.remove('translate-x-0');
+        bonusPanel.classList.add('translate-x-full');
+      });
+      
+      // Zamknij panel po kliknięciu poza nim
+      bonusPanel.addEventListener('click', function(e) {
+        if (e.target === bonusPanel) {
+          bonusPanel.classList.remove('translate-x-0');
+          bonusPanel.classList.add('translate-x-full');
+        }
+      });
       
       // Auto refresh tylko dla aktualnego leaderboard
       setInterval(() => {

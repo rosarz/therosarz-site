@@ -7,9 +7,10 @@
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/clash-display.css">
   <style>
     body {
-      font-family: 'Satoshi', 'Inter', Arial, sans-serif;
+      font-family: 'ClashDisplay-Regular', 'Satoshi', 'Inter', Arial, sans-serif;
       overflow-x: hidden;
       display: flex;
       flex-direction: column;
@@ -74,6 +75,23 @@
       transform: translateY(-2px);
       color: #ffd700;
       text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    }
+    
+    /* Clash Display font variations */
+    .font-clash-light {
+      font-family: 'ClashDisplay-Light', sans-serif;
+    }
+    .font-clash-regular {
+      font-family: 'ClashDisplay-Regular', sans-serif;
+    }
+    .font-clash-medium {
+      font-family: 'ClashDisplay-Medium', sans-serif;
+    }
+    .font-clash-semibold {
+      font-family: 'ClashDisplay-Semibold', sans-serif;
+    }
+    .font-clash-bold {
+      font-family: 'ClashDisplay-Bold', sans-serif;
     }
     
     /* Kolorowe karty */
@@ -156,7 +174,7 @@
       <div class="flex items-center">
         <a href="/" class="logo-link">
           <img src="favicon.ico" alt="Avatar" class="logo-img">
-          <span class="text-xl font-bold">therosarz</span>
+          <span class="text-xl font-clash-bold">therosarz</span>
         </a>
       </div>
       <div class="flex gap-6 text-lg font-semibold">
@@ -169,7 +187,7 @@
     <!-- Główna zawartość -->
     <main class="max-w-6xl mx-auto px-4 py-12">
       <section id="bonuses" class="text-center space-y-20">
-        <h2 class="text-4xl font-bold mb-4 bg-gradient-to-r from-yellow-400 via-pink-500 to-blue-500 bg-clip-text text-transparent">🎁 Bonuses</h2>
+        <h2 class="text-4xl font-clash-bold mb-4 bg-gradient-to-r from-yellow-400 via-pink-500 to-blue-500 bg-clip-text text-transparent">🎁 Bonuses</h2>
         <div class="colorful-card p-8 rounded-lg max-w-4xl mx-auto pulsing-glow">
           <p class="text-lg mb-6">Use code <span class="text-yellow-400 font-semibold rainbow-text">therosarz</span> on sites below to get extra rewards!</p>
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
@@ -177,7 +195,7 @@
             <div class="colorful-card p-4 rounded-lg">
               <div class="flex items-center gap-2 mb-4 justify-center">
                 <img src="bot.png" alt="Rain.gg Logo" class="w-8 h-8 rounded-full">
-                <h3 class="text-xl font-bold text-yellow-400 text-center">Rain.gg</h3>
+                <h3 class="text-xl font-clash-semibold text-yellow-400 text-center">Rain.gg</h3>
               </div>
               <p class="text-center">3 <span class="text-yellow-400 font-semibold">free cases</span> and 5% <span class="text-yellow-400 font-semibold">deposit bonus</span>!</p>
               <a href="https://rain.gg/r/therosarz" target="_blank" class="inline-block mt-3 px-4 py-2 gradient-button rounded hover:scale-105 transition text-center">Claim Bonus</a>
@@ -187,7 +205,7 @@
             <div class="colorful-card p-4 rounded-lg">
               <div class="flex items-center gap-2 mb-4 justify-center">
                 <img src="daddyskins.png" alt="DaddySkins Logo" class="w-8 h-8 rounded-full">
-                <h3 class="text-xl font-bold text-yellow-400 text-center">DaddySkins</h3>
+                <h3 class="text-xl font-clash-semibold text-yellow-400 text-center">DaddySkins</h3>
               </div>
               <p class="text-center">Exclusive <span class="text-yellow-400 font-semibold">bonus</span> with promo code!</p>
               <a href="https://daddyskins.com/en/promo-code/therosarz" target="_blank" class="inline-block mt-3 px-4 py-2 gradient-button rounded hover:scale-105 transition text-center">Claim Bonus</a>
@@ -197,7 +215,7 @@
             <div class="colorful-card p-4 rounded-lg">
               <div class="flex items-center gap-2 mb-4 justify-center">
                 <img src="clashgg.png" alt="Clash.gg Logo" class="w-8 h-8 rounded-full">
-                <h3 class="text-xl font-bold text-yellow-400 text-center">Clash.gg</h3>
+                <h3 class="text-xl font-clash-semibold text-yellow-400 text-center">Clash.gg</h3>
               </div>
               <p class="text-center">Bonus with <span class="text-yellow-400 font-semibold">therosarz</span> code!</p>
               <a href="https://clash.gg/r/THEROSARZ" target="_blank" class="inline-block mt-3 px-4 py-2 gradient-button rounded hover:scale-105 transition text-center">Claim Bonus</a>
@@ -207,7 +225,7 @@
             <div class="colorful-card p-4 rounded-lg">
               <div class="flex items-center gap-2 mb-4 justify-center">
                 <img src="upgrader.png" alt="Upgrader.com Logo" class="w-8 h-8 rounded-full">
-                <h3 class="text-xl font-bold text-yellow-400 text-center">Upgrader.com</h3>
+                <h3 class="text-xl font-clash-semibold text-yellow-400 text-center">Upgrader.com</h3>
               </div>
               <p class="text-center">3 <span class="text-yellow-400 font-semibold">free cases</span> and 3% <span class="text-yellow-400 font-semibold">deposit bonus</span>!</p>
               <a href="https://upgrader.com/r/THEROSARZ" target="_blank" class="inline-block mt-3 px-4 py-2 gradient-button rounded hover:scale-105 transition text-center">Claim Bonus</a>
@@ -217,7 +235,7 @@
             <div class="colorful-card p-4 rounded-lg">
               <div class="flex items-center gap-2 mb-4 justify-center">
                 <img src="csgobig.png" alt="CSGOBIG Logo" class="w-8 h-8 rounded-full">
-                <h3 class="text-xl font-bold text-yellow-400 text-center">CSGOBIG</h3>
+                <h3 class="text-xl font-clash-semibold text-yellow-400 text-center">CSGOBIG</h3>
               </div>
               <p class="text-center">3 <span class="text-yellow-400 font-semibold">free cases</span> and 5% <span class="text-yellow-400 font-semibold">deposit bonus</span>!</p>
               <a href="https://csgobig.com/r/therosarz" target="_blank" class="inline-block mt-3 px-4 py-2 gradient-button rounded hover:scale-105 transition text-center">Claim Bonus</a>
@@ -227,7 +245,7 @@
             <div class="colorful-card p-4 rounded-lg">
               <div class="flex items-center gap-2 mb-4 justify-center">
                 <img src="csgogem.png" alt="CSGOGEM Logo" class="w-8 h-8 rounded-full">
-                <h3 class="text-xl font-bold text-yellow-400 text-center">CSGOGEM</h3>
+                <h3 class="text-xl font-clash-semibold text-yellow-400 text-center">CSGOGEM</h3>
               </div>
               <p class="text-center">5% <span class="text-yellow-400 font-semibold">deposit bonus</span>!</p>
               <a href="https://csgogem.com/r/therosarz" target="_blank" class="inline-block mt-3 px-4 py-2 gradient-button rounded hover:scale-105 transition text-center">Claim Bonus</a>
