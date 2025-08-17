@@ -322,8 +322,8 @@
             <div class="whitespace-nowrap">💰<br/>B<br/>O<br/>N<br/>U<br/>S<br/><br/>R<br/>E<br/>W<br/>A<br/>R<br/>D<br/>S</div>
           </button>
 
-          <!-- Bonus Information Panel (Floating panel z prawej strony) -->
-          <div id="bonus-panel" class="fixed top-0 right-0 w-96 h-full bg-gradient-to-b from-purple-900/95 to-blue-900/95 backdrop-blur-md shadow-2xl border-l border-purple-500/40 z-40 transition-transform duration-300 ease-in-out translate-x-full">
+          <!-- Bonus Information Panel (Floating panel z prawej strony z marginesem) -->
+          <div id="bonus-panel" class="fixed top-4 right-4 w-96 h-[calc(100vh-32px)] bg-gradient-to-b from-purple-900/95 to-blue-900/95 backdrop-blur-md shadow-2xl border border-purple-500/40 rounded-lg z-40 transition-transform duration-300 ease-in-out translate-x-full">
             <div class="p-6 h-full overflow-y-auto">
               <!-- Przycisk zamknij -->
               <div class="flex justify-between items-center mb-6">
@@ -939,13 +939,13 @@
       // Funkcja do pokazania panelu
       function showBonusPanel() {
         bonusPanel.classList.remove('translate-x-full');
-        bonusToggleBtn.style.right = '384px'; // Przesunięcie przycisku (w-96 = 384px)
+        bonusToggleBtn.style.right = '400px'; // Przesunięcie przycisku (w-96 + 16px margin = 400px)
       }
       
       // Funkcja do schowania panelu
       function hideBonusPanel() {
         bonusPanel.classList.add('translate-x-full');
-        bonusToggleBtn.style.right = '0px'; // Przycisk wraca do krawędzi
+        bonusToggleBtn.style.right = '16px'; // Przycisk z marginesem od krawędzi
       }
       
       // Panel domyślnie widoczny
