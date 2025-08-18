@@ -294,7 +294,14 @@
         </div>
         
         <!-- Leaderboard -->
-        <h2 id="leaderboard-title" class="text-4xl font-clash-bold text-center mb-8 bg-gradient-to-r from-yellow-400 via-pink-500 to-blue-500 bg-clip-text text-transparent">🏆 Leaderboard</h2>
+        <h2 id="leaderboard-title" class="text-4xl font-clash-bold text-center mb-4 bg-gradient-to-r from-yellow-400 via-pink-500 to-blue-500 bg-clip-text text-transparent">🏆 Leaderboard</h2>
+        
+        <!-- Claim Button (zmienny w zależności od platformy) -->
+        <div class="flex justify-center mb-8">
+          <a id="claim-button" href="https://rain.gg/r/therosarz" target="_blank" class="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-clash-bold text-lg rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg">
+            🎁 Claim here
+          </a>
+        </div>
         
         <div class="flex justify-center">
           <div class="w-full max-w-5xl">
@@ -1078,12 +1085,17 @@
           const platform = this.querySelector('img').dataset.platform;
           updateTimerForPlatform(platform);
           
-          // Ukryj/Pokaż bonus panel w zależności od platformy
+          // Aktualizuj przycisk Claim w zależności od platformy
+          const claimButton = document.getElementById('claim-button');
           if (platform === 'clash') {
+            claimButton.href = 'https://clash.gg/r/THEROSARZ';
+            claimButton.innerHTML = '🎁 Claim on Clash.gg';
             // Ukryj panel dla Clash.gg
             hideBonusPanel();
             bonusToggleBtn.style.display = 'none';
           } else {
+            claimButton.href = 'https://rain.gg/r/therosarz';
+            claimButton.innerHTML = '🎁 Claim on Rain.gg';
             // Pokaż panel dla Rain.gg
             bonusToggleBtn.style.display = 'block';
             setTimeout(() => {
