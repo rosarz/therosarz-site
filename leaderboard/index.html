@@ -560,8 +560,39 @@
       // Special handling for Clash.gg API structure where data contains leaderboard objects
       if (Array.isArray(users) && users.length > 0 && users[0].topPlayers) {
         console.log('🔍 Found Clash.gg leaderboard structure with topPlayers');
-        console.log('📋 Leaderboard object:', users[0]);
-        users = users[0].topPlayers; // Extract topPlayers from first leaderboard
+        console.log('📋 All leaderboards returned:', users);
+        
+        // Try to find the correct leaderboard by ID if we have multiple
+        let targetLeaderboard = users[0]; // default to first
+        
+        // If we have multiple leaderboards, find the one with matching ID
+        if (users.length > 1) {
+          console.log('🔍 Multiple leaderboards found, searching for correct one...');
+          users.forEach((lb, index) => {
+            console.log(`📋 Leaderboard ${index}:`, {
+              id: lb.id,
+              name: lb.name,
+              startDate: lb.startDate,
+              status: lb.status,
+              playersCount: lb.topPlayers?.length || 0
+            });
+          });
+          
+          // Find leaderboard with ID 617 (current active)
+          const foundLeaderboard = users.find(lb => lb.id === 617 || lb.id === '617');
+          if (foundLeaderboard) {
+            console.log('✅ Found leaderboard with ID 617:', foundLeaderboard);
+            targetLeaderboard = foundLeaderboard;
+          } else {
+            console.log('⚠️ Leaderboard ID 617 not found, using most recent one');
+            // Use the leaderboard with the most recent start date
+            targetLeaderboard = users.sort((a, b) => new Date(b.startDate) - new Date(a.startDate))[0];
+            console.log('📅 Using most recent leaderboard:', targetLeaderboard);
+          }
+        }
+        
+        console.log('🎯 Selected leaderboard:', targetLeaderboard);
+        users = targetLeaderboard.topPlayers; // Extract topPlayers from selected leaderboard
         console.log('✅ Extracted topPlayers:', users);
       }
       
