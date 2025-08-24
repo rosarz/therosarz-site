@@ -748,8 +748,8 @@
       let rewards;
       let coinIcon;
       if (siteName.toLowerCase().includes('clash')) {
-        // Nagrody dla Clash.gg (dokładne wartości z leaderboard)
-        rewards = [75, 50, 30, 20, 10, 5, 5, 5]; // Miejsca 1-8
+        // Nagrody dla Clash.gg - nowy leaderboard 500$ (miejsca 1-9)
+        rewards = [200, 100, 75, 50, 25, 20, 15, 10, 5]; // Miejsca 1-9
         coinIcon = "../clash_gem.png";
       } else {
         // Nagrody dla Rain.gg (oryginalne)
@@ -916,7 +916,7 @@
           endDate: "2025-09-06T16:00:00.00Z", 
           code: "THEROSARZ",
           name: "Clash.gg",
-          defaultPrize: "200$",
+          defaultPrize: "500$",
           apiType: "clash",
           leaderboardId: "617"
         }
