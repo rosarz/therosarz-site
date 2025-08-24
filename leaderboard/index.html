@@ -887,7 +887,7 @@
           name: "Clash.gg",
           defaultPrize: "200$",
           apiType: "clash",
-          leaderboardId: "517"
+          leaderboardId: "617"
         }
       };
 
@@ -900,6 +900,8 @@
           // Clash.gg API call - use authorized endpoints
           try {
             console.log('=== CLASH.GG API DEBUG START ===');
+            console.log('Current date:', new Date().toISOString());
+            console.log('Config dates:', config.startDate, 'to', config.endDate);
             console.log('Trying Clash.gg my-leaderboards-api with authorization');
             
             const response = await fetch('https://clash.gg/api/affiliates/leaderboards/my-leaderboards-api', {
