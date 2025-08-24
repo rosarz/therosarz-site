@@ -881,8 +881,8 @@
           apiType: "rain"
         },
         clash: {
-          startDate: "2025-08-07T00:00:00.00Z",
-          endDate: "2025-08-21T00:00:00.00Z", 
+          startDate: "2025-08-23T16:00:00.00Z",
+          endDate: "2025-09-06T16:00:00.00Z", 
           code: "THEROSARZ",
           name: "Clash.gg",
           defaultPrize: "200$",
@@ -1067,8 +1067,8 @@
       function updateTimerForPlatform(platform) {
         let endDate;
         if (platform === 'clash') {
-          // Clash.gg: start 7 sierpnia 2025, trwa 14 dni = koniec 21 sierpnia 2025
-          endDate = "2025-08-21T23:59:59.00Z";
+          // Clash.gg: start 23 sierpnia 2025 16:00, trwa 2 tygodnie = koniec 6 września 2025 16:00
+          endDate = "2025-09-06T16:00:00.00Z";
         } else {
           // Rain.gg: nowy leaderboard kończy się 28 sierpnia 2025
           endDate = "2025-08-28T00:00:00.00Z";
