@@ -578,13 +578,13 @@
             });
           });
           
-          // Find leaderboard with ID 617 (current active)
-          const foundLeaderboard = users.find(lb => lb.id === 617 || lb.id === '617');
+          // Find leaderboard with ID 728 (current active)
+          const foundLeaderboard = users.find(lb => lb.id === 728 || lb.id === '728');
           if (foundLeaderboard) {
-            console.log('✅ Found leaderboard with ID 617:', foundLeaderboard);
+            console.log('✅ Found leaderboard with ID 728:', foundLeaderboard);
             targetLeaderboard = foundLeaderboard;
           } else {
-            console.log('⚠️ Leaderboard ID 617 not found, using most recent one');
+            console.log('⚠️ Leaderboard ID 728 not found, using most recent one');
             // Use the leaderboard with the most recent start date
             targetLeaderboard = users.sort((a, b) => new Date(b.startDate) - new Date(a.startDate))[0];
             console.log('📅 Using most recent leaderboard:', targetLeaderboard);
@@ -918,7 +918,7 @@
           name: "Clash.gg",
           defaultPrize: "500$",
           apiType: "clash",
-          leaderboardId: "617"
+          leaderboardId: "728"
         }
       };
 
@@ -1037,7 +1037,7 @@
           name: "Clash.gg",
           defaultPrize: "500$",
           apiType: "clash",
-          leaderboardId: "517"
+          leaderboardId: "617"
         }
       };
 
