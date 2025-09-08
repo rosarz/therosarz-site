@@ -1027,7 +1027,7 @@
           endDate: "2025-08-28T23:59:59.99Z",
           code: "therosarz",
           name: "Rain.gg",
-          defaultPrize: "300$",
+          defaultPrize: "600$",
           apiType: "rain"
         },
         clash: {
@@ -1049,7 +1049,7 @@
         if (config.apiType === 'clash') {
           // Clash.gg API call - use detailed-summary for previous data with specific date
           try {
-            const previousDate = '2025-07-24'; // Start date for previous period
+            const previousDate = '2025-08-24'; // Start date for previous period
             console.log(`Trying previous Clash.gg detailed-summary API with date: ${previousDate}`);
             
             const response = await fetch(`https://api.clash.gg/affiliates/detailed-summary/v2/${previousDate}`, {
@@ -1101,7 +1101,7 @@
         let endDate;
         if (platform === 'clash') {
           // Clash.gg: start 23 sierpnia 2025 16:00, trwa 2 tygodnie = koniec 6 września 2025 16:00
-          endDate = "2025-09-06T16:00:00.00Z";
+          endDate = "2025-09-22T01:00:00.00Z";
         } else {
           // Rain.gg: nowy leaderboard kończy się 12 września 2025
           endDate = "2025-09-12T00:00:00.00Z";
