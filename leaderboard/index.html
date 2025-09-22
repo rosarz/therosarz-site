@@ -577,14 +577,14 @@
               playersCount: lb.topPlayers?.length || 0
             });
           });
-          
-          // Find leaderboard with ID 728 (current active)
-          const foundLeaderboard = users.find(lb => lb.id === 728 || lb.id === '728');
+
+          // Find leaderboard with ID 841 (current active)
+          const foundLeaderboard = users.find(lb => lb.id === 841 || lb.id === '841');
           if (foundLeaderboard) {
-            console.log('✅ Found leaderboard with ID 728:', foundLeaderboard);
+            console.log('✅ Found leaderboard with ID 841:', foundLeaderboard);
             targetLeaderboard = foundLeaderboard;
           } else {
-            console.log('⚠️ Leaderboard ID 728 not found, using most recent one');
+            console.log('⚠️ Leaderboard ID 841 not found, using most recent one');
             // Use the leaderboard with the most recent start date
             targetLeaderboard = users.sort((a, b) => new Date(b.startDate) - new Date(a.startDate))[0];
             console.log('📅 Using most recent leaderboard:', targetLeaderboard);
