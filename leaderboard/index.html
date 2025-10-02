@@ -290,6 +290,9 @@
             <button id="clash-selector" class="site-selector" data-platform="clash">
               <img src="../clashggtext.png" alt="Clash.gg" class="h-20 w-auto transition-all duration-300 hover:scale-105" data-platform="clash">
             </button>
+            <button id="csgobig-selector" class="site-selector" data-platform="csgobig">
+              <img src="../clashggtext.png" alt="CSGOBig" class="h-20 w-auto transition-all duration-300 hover:scale-105" data-platform="csgobig">
+            </button>
           </div>
         </div>
         
@@ -668,6 +671,97 @@
       return transformedUsers;
     }
 
+    function transformCSGOBigData(csgobigData) {
+      // Transform CSGOBig API response to match Rain.gg format
+      console.log('=== CSGOBIG DATA TRANSFORMATION START ===');
+      console.log('Raw CSGOBig data structure:', csgobigData);
+      console.log('Data type:', typeof csgobigData);
+      console.log('Is array:', Array.isArray(csgobigData));
+      
+      if (!csgobigData) {
+        console.log('❌ No CSGOBig data received');
+        return [];
+      }
+      
+      // Log all top-level keys to understand the structure
+      if (typeof csgobigData === 'object' && !Array.isArray(csgobigData)) {
+        console.log('📋 Top-level keys in csgobigData:', Object.keys(csgobigData));
+      }
+      
+      // Try different possible data structures from CSGOBig API
+      let users = csgobigData.referrals || csgobigData.users || csgobigData.data || csgobigData.results || csgobigData.leaderboard || csgobigData;
+      console.log('🔍 Users after initial extraction:', users);
+      console.log('🔍 Users type:', typeof users, 'IsArray:', Array.isArray(users));
+      
+      // If it's still an object, try to find the user array
+      if (!Array.isArray(users)) {
+        console.log('⚠️ Data is not array, exploring deeper...');
+        
+        if (typeof users === 'object' && users !== null) {
+          console.log('🔎 Available fields in users object:', Object.keys(users));
+          
+          // Try common field names for CSGOBig
+          if (users.entries) {
+            users = users.entries;
+            console.log('✅ Found entries field');
+          } else if (users.participants) {
+            users = users.participants;
+            console.log('✅ Found participants field');
+          } else if (users.players) {
+            users = users.players;
+            console.log('✅ Found players field');
+          } else if (users.items) {
+            users = users.items;
+            console.log('✅ Found items field');
+          } else if (users.referralStats) {
+            users = users.referralStats;
+            console.log('✅ Found referralStats field');
+          } else {
+            console.log('❌ Could not find user array in CSGOBig response');
+            console.log('🔍 Full object structure:', JSON.stringify(users, null, 2));
+            return [];
+          }
+        }
+      }
+      
+      if (!Array.isArray(users)) {
+        console.log('❌ Still not an array after transformation attempts');
+        console.log('Final users value:', users);
+        return [];
+      }
+      
+      console.log(`✅ Found ${users.length} users in CSGOBig data`);
+      
+      const transformedUsers = users.map((user, index) => {
+        console.log(`👤 Raw user ${index + 1} data:`, user);
+        console.log(`🔑 Available user fields:`, Object.keys(user));
+        
+        // Try multiple field variations for each property
+        const username = user.username || user.name || user.user || user.displayName || user.player_name || user.nick || user.handle || user.playerName || user.userId || user.steamId || `User ${index + 1}`;
+        
+        // Try multiple variations for wagered amount - CSGOBig might use different field names
+        const rawWagered = user.wagered || user.wager || user.totalWager || user.amount || user.value || user.total_wagered || user.totalAmount || user.wager_amount || user.bet_amount || user.volume || user.totalWagered || user.wagerAmount || user.totalVolume || user.deposited || user.totalDeposited || 0;
+        const wagered = parseFloat(rawWagered) / 100; // Convert from cents to dollars if needed
+        
+        // Try multiple variations for avatar
+        const avatar = user.avatar || user.avatarUrl || user.profilePicture || user.profile_picture || user.image || user.profileImage || user.steamAvatar || '../bot.png';
+        
+        const result = {
+          username,
+          wagered,
+          avatar
+        };
+        
+        console.log(`✨ Transformed user ${index + 1}:`, result);
+        return result;
+      });
+      
+      console.log('=== CSGOBIG DATA TRANSFORMATION END ===');
+      console.log(`📊 Final result: ${transformedUsers.length} transformed users`);
+      
+      return transformedUsers;
+    }
+
     // Global timer variable to clear previous intervals
     let raceTimerInterval = null;
 
@@ -751,6 +845,10 @@
         // Nagrody dla Clash.gg - nowy leaderboard 500$ (miejsca 1-9)
         rewards = [200, 100, 75, 50, 25, 20, 15, 10, 5]; // Miejsca 1-9
         coinIcon = "../clash_gem.png";
+      } else if (siteName.toLowerCase().includes('csgobig')) {
+        // Nagrody dla CSGOBig - podobne do Clash.gg
+        rewards = [200, 100, 75, 50, 25, 20, 15, 10, 5]; // Miejsca 1-9
+        coinIcon = "../coin.png"; // Użyj domyślnej ikony monety lub dodaj specjalną dla CSGOBig
       } else {
         // Nagrody dla Rain.gg (oryginalne)
         rewards = [250, 125, 75, 45, 25, 15, 10, 5];
@@ -901,7 +999,7 @@
     }
 
     async function fetchLeaderboard(siteName = 'rain') {
-      // Konfiguracja tylko dla Rain.gg i Clash.gg
+      // Konfiguracja tylko dla Rain.gg, Clash.gg i CSGOBig
       const siteConfigs = {
         rain: {
           startDate: "2025-10-03T00:00:00.00Z",
@@ -919,6 +1017,14 @@
           defaultPrize: "500$",
           apiType: "clash",
           leaderboardId: "841"
+        },
+        csgobig: {
+          startDate: "2025-10-03T00:00:00.00Z",
+          endDate: "2025-10-17T23:59:59.99Z",
+          code: "ROSARZ8374JSDBJK384784983HDJSADBJHER",
+          name: "CSGOBig",
+          defaultPrize: "500$",
+          apiType: "csgobig"
         }
       };
 
@@ -927,7 +1033,58 @@
       try {
         let data;
         
-        if (config.apiType === 'clash') {
+        if (config.apiType === 'csgobig') {
+          // CSGOBig API call
+          try {
+            console.log('=== CSGOBIG API DEBUG START ===');
+            console.log('Current date:', new Date().toISOString());
+            console.log('Config dates:', config.startDate, 'to', config.endDate);
+            
+            // Convert dates to epoch milliseconds
+            const fromEpoch = new Date(config.startDate).getTime();
+            const toEpoch = new Date(config.endDate).getTime();
+            
+            console.log('Epoch timestamps:', fromEpoch, 'to', toEpoch);
+            console.log('Trying CSGOBig API with referral code:', config.code);
+            
+            const url = `https://csgobig.com/api/partners/getRefDetails/${config.code}?from=${fromEpoch}&to=${toEpoch}`;
+            console.log('CSGOBig API URL:', url);
+            
+            const response = await fetch(url, {
+              headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            console.log('CSGOBig API response status:', response.status);
+            console.log('Response headers:', [...response.headers.entries()]);
+            
+            if (response.ok) {
+              const responseText = await response.text();
+              console.log('Raw response text:', responseText);
+              try {
+                data = JSON.parse(responseText);
+                console.log(`${config.name} API JSON:`, data);
+              } catch (parseError) {
+                console.error('JSON parse error:', parseError);
+                throw new Error('Invalid JSON response from CSGOBig API');
+              }
+            } else {
+              const errorText = await response.text();
+              console.log(`CSGOBig API failed with status ${response.status}:`, errorText);
+              throw new Error(`CSGOBig API failed with status: ${response.status}`);
+            }
+            console.log('=== CSGOBIG API DEBUG END ===');
+          } catch (e) {
+            console.error(`Failed to fetch from CSGOBig API:`, e);
+            throw new Error(`CSGOBig API error: ${e.message}`);
+          }
+          
+          // Transform CSGOBig data to match our format
+          const transformedResults = transformCSGOBigData(data);
+          data = { results: transformedResults };
+        } else if (config.apiType === 'clash') {
           // Clash.gg API call - use authorized endpoints
           try {
             console.log('=== CLASH.GG API DEBUG START ===');
@@ -1020,7 +1177,7 @@
     }
 
     async function fetchPreviousLeaderboard(siteName = 'rain') {
-      // Konfiguracja tylko dla Rain.gg i Clash.gg - poprzedni leaderboard
+      // Konfiguracja tylko dla Rain.gg, Clash.gg i CSGOBig - poprzedni leaderboard
       const siteConfigs = {
         rain: {
           startDate: "2025-09-19T00:00:00.00Z",
@@ -1038,6 +1195,14 @@
           defaultPrize: "500$",
           apiType: "clash",
           leaderboardId: "728"
+        },
+        csgobig: {
+          startDate: "2025-09-19T00:00:00.00Z",
+          endDate: "2025-10-03T23:59:59.99Z",
+          code: "ROSARZ8374JSDBJK384784983HDJSADBJHER",
+          name: "CSGOBig",
+          defaultPrize: "500$",
+          apiType: "csgobig"
         }
       };
 
@@ -1046,7 +1211,40 @@
       try {
         let data;
         
-        if (config.apiType === 'clash') {
+        if (config.apiType === 'csgobig') {
+          // CSGOBig API call for previous period
+          try {
+            console.log(`Trying previous CSGOBig API`);
+            
+            // Convert dates to epoch milliseconds
+            const fromEpoch = new Date(config.startDate).getTime();
+            const toEpoch = new Date(config.endDate).getTime();
+            
+            const url = `https://csgobig.com/api/partners/getRefDetails/${config.code}?from=${fromEpoch}&to=${toEpoch}`;
+            console.log('Previous CSGOBig API URL:', url);
+            
+            const response = await fetch(url, {
+              headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            if (response.ok) {
+              data = await response.json();
+              console.log(`Previous ${config.name} API response:`, data);
+            } else {
+              throw new Error(`Previous CSGOBig API failed with status: ${response.status}`);
+            }
+          } catch (e) {
+            console.log(`Failed to fetch previous from CSGOBig API:`, e.message);
+            throw new Error(`Previous CSGOBig API error: ${e.message}`);
+          }
+          
+          // Transform CSGOBig data to match our format
+          const transformedResults = transformCSGOBigData(data);
+          data = { results: transformedResults };
+        } else if (config.apiType === 'clash') {
           // Clash.gg API call - use detailed-summary for previous data with specific date
           try {
             const previousDate = '2025-09-08'; // Start date for previous period
@@ -1102,9 +1300,12 @@
         if (platform === 'clash') {
           // Clash.gg: start 22 września 2025 01:00, trwa 2 tygodnie = koniec 6 października 2025 01:00
           endDate = "2025-10-06T01:00:00.00Z";
+        } else if (platform === 'csgobig') {
+          // CSGOBig: koniec 17 października 2025
+          endDate = "2025-10-17T23:59:59.99Z";
         } else {
-          // Rain.gg: nowy leaderboard kończy się 16 października 2025
-          endDate = "2025-10-16T23:59:59.99Z";
+          // Rain.gg: nowy leaderboard kończy się 17 października 2025
+          endDate = "2025-10-17T23:59:59.99Z";
         }
         startRaceTimer(endDate);
       }
@@ -1124,6 +1325,12 @@
             claimButton.href = 'https://clash.gg/r/THEROSARZ';
             claimButton.innerHTML = '🎁 Claim on Clash.gg';
             // Ukryj panel dla Clash.gg
+            hideBonusPanel();
+            bonusToggleBtn.style.display = 'none';
+          } else if (platform === 'csgobig') {
+            claimButton.href = 'https://csgobig.com/r/ROSARZ8374JSDBJK384784983HDJSADBJHER';
+            claimButton.innerHTML = '🎁 Claim on CSGOBig';
+            // Ukryj panel dla CSGOBig
             hideBonusPanel();
             bonusToggleBtn.style.display = 'none';
           } else {
