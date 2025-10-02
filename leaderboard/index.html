@@ -1034,56 +1034,44 @@
         let data;
         
         if (config.apiType === 'csgobig') {
-          // CSGOBig API call
+          // CSGOBig API call through proxy
           try {
             console.log('=== CSGOBIG API DEBUG START ===');
             console.log('Current date:', new Date().toISOString());
             console.log('Config dates:', config.startDate, 'to', config.endDate);
             
-            // Convert dates to epoch milliseconds
+            // Convert dates to epoch milliseconds for CSGOBig API
             const fromEpoch = new Date(config.startDate).getTime();
             const toEpoch = new Date(config.endDate).getTime();
             
             console.log('Epoch timestamps:', fromEpoch, 'to', toEpoch);
-            console.log('Trying CSGOBig API with referral code:', config.code);
+            console.log('Trying CSGOBig API through proxy with referral code:', config.code);
             
-            const url = `https://csgobig.com/api/partners/getRefDetails/${config.code}?from=${fromEpoch}&to=${toEpoch}`;
-            console.log('CSGOBig API URL:', url);
+            // Use your backend API to proxy the CSGOBig request
+            const TYPE = "wagered";
+            const url = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&type=${TYPE}&code=${config.code}&site=csgobig&from_epoch=${fromEpoch}&to_epoch=${toEpoch}`;
+            console.log('CSGOBig Proxy API URL:', url);
             
-            const response = await fetch(url, {
-              headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-              }
-            });
+            const response = await fetch(url);
             
-            console.log('CSGOBig API response status:', response.status);
-            console.log('Response headers:', [...response.headers.entries()]);
+            console.log('CSGOBig Proxy API response status:', response.status);
             
             if (response.ok) {
-              const responseText = await response.text();
-              console.log('Raw response text:', responseText);
-              try {
-                data = JSON.parse(responseText);
-                console.log(`${config.name} API JSON:`, data);
-              } catch (parseError) {
-                console.error('JSON parse error:', parseError);
-                throw new Error('Invalid JSON response from CSGOBig API');
-              }
+              data = await response.json();
+              console.log(`${config.name} Proxy API JSON:`, data);
             } else {
               const errorText = await response.text();
-              console.log(`CSGOBig API failed with status ${response.status}:`, errorText);
-              throw new Error(`CSGOBig API failed with status: ${response.status}`);
+              console.log(`CSGOBig Proxy API failed with status ${response.status}:`, errorText);
+              throw new Error(`CSGOBig Proxy API failed with status: ${response.status}`);
             }
             console.log('=== CSGOBIG API DEBUG END ===');
           } catch (e) {
-            console.error(`Failed to fetch from CSGOBig API:`, e);
+            console.error(`Failed to fetch from CSGOBig Proxy API:`, e);
             throw new Error(`CSGOBig API error: ${e.message}`);
           }
           
-          // Transform CSGOBig data to match our format
-          const transformedResults = transformCSGOBigData(data);
-          data = { results: transformedResults };
+          // CSGOBig data should already be in the correct format from your backend
+          // No need to transform if your backend handles the transformation
         } else if (config.apiType === 'clash') {
           // Clash.gg API call - use authorized endpoints
           try {
@@ -1212,38 +1200,32 @@
         let data;
         
         if (config.apiType === 'csgobig') {
-          // CSGOBig API call for previous period
+          // CSGOBig API call for previous period through proxy
           try {
-            console.log(`Trying previous CSGOBig API`);
+            console.log(`Trying previous CSGOBig API through proxy`);
             
             // Convert dates to epoch milliseconds
             const fromEpoch = new Date(config.startDate).getTime();
             const toEpoch = new Date(config.endDate).getTime();
             
-            const url = `https://csgobig.com/api/partners/getRefDetails/${config.code}?from=${fromEpoch}&to=${toEpoch}`;
-            console.log('Previous CSGOBig API URL:', url);
+            const TYPE = "wagered";
+            const url = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&type=${TYPE}&code=${config.code}&site=csgobig&from_epoch=${fromEpoch}&to_epoch=${toEpoch}`;
+            console.log('Previous CSGOBig Proxy API URL:', url);
             
-            const response = await fetch(url, {
-              headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-              }
-            });
+            const response = await fetch(url);
             
             if (response.ok) {
               data = await response.json();
-              console.log(`Previous ${config.name} API response:`, data);
+              console.log(`Previous ${config.name} Proxy API response:`, data);
             } else {
-              throw new Error(`Previous CSGOBig API failed with status: ${response.status}`);
+              throw new Error(`Previous CSGOBig Proxy API failed with status: ${response.status}`);
             }
           } catch (e) {
-            console.log(`Failed to fetch previous from CSGOBig API:`, e.message);
+            console.log(`Failed to fetch previous from CSGOBig Proxy API:`, e.message);
             throw new Error(`Previous CSGOBig API error: ${e.message}`);
           }
           
-          // Transform CSGOBig data to match our format
-          const transformedResults = transformCSGOBigData(data);
-          data = { results: transformedResults };
+          // CSGOBig data should already be in correct format from backend
         } else if (config.apiType === 'clash') {
           // Clash.gg API call - use detailed-summary for previous data with specific date
           try {
@@ -1420,6 +1402,24 @@
 
       // Obsługa przycisków Current/Previous
       document.getElementById('current-btn').addEventListener('click', function() {
+        this.classList.add('active');
+        document.getElementById('previous-btn').classList.remove('active');
+        fetchLeaderboard(currentPlatform);
+      });
+
+      document.getElementById('previous-btn').addEventListener('click', function() {
+        this.classList.add('active');
+        document.getElementById('current-btn').classList.remove('active');
+        fetchPreviousLeaderboard(currentPlatform);
+      });
+
+      // Inicjalizacja - Rain.gg jako aktywny i załaduj current leaderboard
+      document.querySelector('[data-platform="rain"]').parentElement.classList.add('active');
+      fetchLeaderboard('rain');
+    });
+  </script>
+</body>
+</html>
         this.classList.add('active');
         document.getElementById('previous-btn').classList.remove('active');
         fetchLeaderboard(currentPlatform);
