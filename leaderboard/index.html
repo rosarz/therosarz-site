@@ -290,12 +290,9 @@
             <button id="clash-selector" class="site-selector" data-platform="clash">
               <img src="../clashggtext.png" alt="Clash.gg" class="h-20 w-auto transition-all duration-300 hover:scale-105" data-platform="clash">
             </button>
-            <!-- CSGOBig temporarily hidden until valid referral code is obtained -->
-            <!--
             <button id="csgobig-selector" class="site-selector" data-platform="csgobig">
               <img src="../csgobigtext.png" alt="CSGOBig" class="h-20 w-auto transition-all duration-300 hover:scale-105" data-platform="csgobig">
             </button>
-            -->
           </div>
         </div>
         
@@ -1042,7 +1039,6 @@
             console.log('=== CSGOBIG API DEBUG START ===');
             console.log('Current date:', new Date().toISOString());
             console.log('Config dates:', config.startDate, 'to', config.endDate);
-            console.log('Referral code:', config.code);
             
             // Convert dates to epoch milliseconds for CSGOBig API
             const fromEpoch = new Date(config.startDate).getTime();
@@ -1063,16 +1059,6 @@
             if (response.ok) {
               data = await response.json();
               console.log(`${config.name} Proxy API JSON:`, data);
-              
-              // Check if the response indicates an error from CSGOBig API
-              if (data.code && data.code !== 200) {
-                console.error('CSGOBig API returned error:', data);
-                if (data.status === 'INVALID_ARGUMENT' && data.details?.[0]?.reason?.includes('Invalid campaign code')) {
-                  throw new Error(`Invalid CSGOBig referral code: ${config.code}. The code may not exist or may be inactive.`);
-                } else {
-                  throw new Error(`CSGOBig API error: ${data.status || 'Unknown error'}`);
-                }
-              }
             } else {
               const errorText = await response.text();
               console.log(`CSGOBig Proxy API failed with status ${response.status}:`, errorText);
@@ -1081,21 +1067,7 @@
             console.log('=== CSGOBIG API DEBUG END ===');
           } catch (e) {
             console.error(`Failed to fetch from CSGOBig Proxy API:`, e);
-            
-            // Show user-friendly error message
-            document.getElementById("dynamic-leaderboard").innerHTML = `
-              <div class="text-center mt-8 p-6 bg-red-900/20 border border-red-500/40 rounded-lg">
-                <h3 class="text-xl font-clash-bold text-red-400 mb-3">⚠️ CSGOBig Leaderboard Unavailable</h3>
-                <p class="text-gray-300 mb-4">The CSGOBig referral code appears to be invalid or inactive.</p>
-                <p class="text-sm text-gray-400">Error: ${e.message}</p>
-                <div class="mt-4 p-3 bg-yellow-900/20 border border-yellow-500/40 rounded">
-                  <p class="text-yellow-300 text-sm">
-                    <strong>Note:</strong> CSGOBig leaderboard will be available once a valid referral code is obtained and someone uses it to sign up.
-                  </p>
-                </div>
-              </div>
-            `;
-            return; // Exit early to prevent further processing
+            throw new Error(`CSGOBig API error: ${e.message}`);
           }
           
           // CSGOBig data should already be in the correct format from your backend
@@ -1338,15 +1310,11 @@
             hideBonusPanel();
             bonusToggleBtn.style.display = 'none';
           } else if (platform === 'csgobig') {
-            // Update the referral link - note: this code might not be active yet
             claimButton.href = 'https://csgobig.com/r/ROSARZ8374JSDBJK384784983HDJSADBJHER';
             claimButton.innerHTML = '🎁 Claim on CSGOBig';
             // Ukryj panel dla CSGOBig
             hideBonusPanel();
             bonusToggleBtn.style.display = 'none';
-            
-            // Show warning about potentially inactive code
-            console.warn('CSGOBig referral code may be inactive. Check the leaderboard for current status.');
           } else {
             claimButton.href = 'https://rain.gg/r/therosarz';
             claimButton.innerHTML = '🎁 Claim on Rain.gg';
@@ -1434,6 +1402,24 @@
 
       // Obsługa przycisków Current/Previous
       document.getElementById('current-btn').addEventListener('click', function() {
+        this.classList.add('active');
+        document.getElementById('previous-btn').classList.remove('active');
+        fetchLeaderboard(currentPlatform);
+      });
+
+      document.getElementById('previous-btn').addEventListener('click', function() {
+        this.classList.add('active');
+        document.getElementById('current-btn').classList.remove('active');
+        fetchPreviousLeaderboard(currentPlatform);
+      });
+
+      // Inicjalizacja - Rain.gg jako aktywny i załaduj current leaderboard
+      document.querySelector('[data-platform="rain"]').parentElement.classList.add('active');
+      fetchLeaderboard('rain');
+    });
+  </script>
+</body>
+</html>
         this.classList.add('active');
         document.getElementById('previous-btn').classList.remove('active');
         fetchLeaderboard(currentPlatform);
