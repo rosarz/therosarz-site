@@ -291,7 +291,7 @@
               <img src="../clashggtext.png" alt="Clash.gg" class="h-20 w-auto transition-all duration-300 hover:scale-105" data-platform="clash">
             </button>
             <button id="csgobig-selector" class="site-selector" data-platform="csgobig">
-              <img src="../csgobigtext.png" alt="CSGOBig" class="h-20 w-auto transition-all duration-300 hover:scale-105" data-platform="csgobig">
+              <img src="../clashggtext.png" alt="CSGOBig" class="h-20 w-auto transition-all duration-300 hover:scale-105" data-platform="csgobig">
             </button>
           </div>
         </div>
@@ -1021,7 +1021,7 @@
         csgobig: {
           startDate: "2025-10-03T00:00:00.00Z",
           endDate: "2025-10-17T23:59:59.99Z",
-          code: "ROSARZ8374JSDBJK384784983HDJSADBJHER", // TODO: Verify this referral code
+          code: "ROSARZ8374JSDBJK384784983HDJSADBJHER",
           name: "CSGOBig",
           defaultPrize: "500$",
           apiType: "csgobig"
@@ -1034,51 +1034,56 @@
         let data;
         
         if (config.apiType === 'csgobig') {
-          // CSGOBig API call through proxy
+          // CSGOBig API call
           try {
             console.log('=== CSGOBIG API DEBUG START ===');
             console.log('Current date:', new Date().toISOString());
             console.log('Config dates:', config.startDate, 'to', config.endDate);
             
-            // Convert dates to epoch milliseconds for CSGOBig API
+            // Convert dates to epoch milliseconds
             const fromEpoch = new Date(config.startDate).getTime();
             const toEpoch = new Date(config.endDate).getTime();
             
             console.log('Epoch timestamps:', fromEpoch, 'to', toEpoch);
-            console.log('Trying CSGOBig API through proxy with referral code:', config.code);
+            console.log('Trying CSGOBig API with referral code:', config.code);
             
-            // Use your backend API to proxy the CSGOBig request
-            const TYPE = "wagered";
-            const url = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&type=${TYPE}&code=${config.code}&site=csgobig&from_epoch=${fromEpoch}&to_epoch=${toEpoch}`;
-            console.log('CSGOBig Proxy API URL:', url);
+            const url = `https://csgobig.com/api/partners/getRefDetails/${config.code}?from=${fromEpoch}&to=${toEpoch}`;
+            console.log('CSGOBig API URL:', url);
             
-            const response = await fetch(url);
+            const response = await fetch(url, {
+              headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              }
+            });
             
-            console.log('CSGOBig Proxy API response status:', response.status);
+            console.log('CSGOBig API response status:', response.status);
+            console.log('Response headers:', [...response.headers.entries()]);
             
             if (response.ok) {
-              data = await response.json();
-              console.log(`${config.name} Proxy API JSON:`, data);
-              
-              // Check if the response contains an error from CSGOBig API
-              if (data.code === 400 && data.status === 'INVALID_ARGUMENT') {
-                const errorMessage = data.details?.[0]?.reason || 'Invalid campaign code';
-                console.log(`CSGOBig API Error: ${errorMessage}`);
-                throw new Error(`CSGOBig API Error: ${errorMessage}. Please check if someone has used the referral code.`);
+              const responseText = await response.text();
+              console.log('Raw response text:', responseText);
+              try {
+                data = JSON.parse(responseText);
+                console.log(`${config.name} API JSON:`, data);
+              } catch (parseError) {
+                console.error('JSON parse error:', parseError);
+                throw new Error('Invalid JSON response from CSGOBig API');
               }
             } else {
               const errorText = await response.text();
-              console.log(`CSGOBig Proxy API failed with status ${response.status}:`, errorText);
-              throw new Error(`CSGOBig Proxy API failed with status: ${response.status}`);
+              console.log(`CSGOBig API failed with status ${response.status}:`, errorText);
+              throw new Error(`CSGOBig API failed with status: ${response.status}`);
             }
             console.log('=== CSGOBIG API DEBUG END ===');
           } catch (e) {
-            console.error(`Failed to fetch from CSGOBig Proxy API:`, e);
+            console.error(`Failed to fetch from CSGOBig API:`, e);
             throw new Error(`CSGOBig API error: ${e.message}`);
           }
           
-          // CSGOBig data should already be in the correct format from your backend
-          // No need to transform if your backend handles the transformation
+          // Transform CSGOBig data to match our format
+          const transformedResults = transformCSGOBigData(data);
+          data = { results: transformedResults };
         } else if (config.apiType === 'clash') {
           // Clash.gg API call - use authorized endpoints
           try {
@@ -1167,14 +1172,7 @@
         renderLeaderboard(data.results || [], "dynamic-leaderboard", false, config.name);
       } catch (e) {
         console.error(`Error fetching ${config.name} leaderboard:`, e);
-        
-        // Show more user-friendly error message for CSGOBig
-        let errorMessage = `Failed to load ${config.name} leaderboard.`;
-        if (config.apiType === 'csgobig' && e.message.includes('Invalid campaign code')) {
-          errorMessage = `🔄 CSGOBig leaderboard not available yet. Nobody has used the referral code or it needs to be activated first.`;
-        }
-        
-        document.getElementById("dynamic-leaderboard").innerHTML = `<div class="text-orange-400 mt-4 p-4 bg-orange-900/20 rounded-lg border border-orange-500/30">${errorMessage}</div>`;
+        document.getElementById("dynamic-leaderboard").innerHTML = `<div class="text-red-400 mt-4">Failed to load ${config.name} leaderboard.</div>`;
       }
     }
 
@@ -1203,7 +1201,7 @@
           endDate: "2025-10-03T23:59:59.99Z",
           code: "ROSARZ8374JSDBJK384784983HDJSADBJHER",
           name: "CSGOBig",
-          defaultPrize: "750$",
+          defaultPrize: "500$",
           apiType: "csgobig"
         }
       };
@@ -1214,39 +1212,38 @@
         let data;
         
         if (config.apiType === 'csgobig') {
-          // CSGOBig API call for previous period through proxy
+          // CSGOBig API call for previous period
           try {
-            console.log(`Trying previous CSGOBig API through proxy`);
+            console.log(`Trying previous CSGOBig API`);
             
             // Convert dates to epoch milliseconds
             const fromEpoch = new Date(config.startDate).getTime();
             const toEpoch = new Date(config.endDate).getTime();
             
-            const TYPE = "wagered";
-            const url = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&type=${TYPE}&code=${config.code}&site=csgobig&from_epoch=${fromEpoch}&to_epoch=${toEpoch}`;
-            console.log('Previous CSGOBig Proxy API URL:', url);
+            const url = `https://csgobig.com/api/partners/getRefDetails/${config.code}?from=${fromEpoch}&to=${toEpoch}`;
+            console.log('Previous CSGOBig API URL:', url);
             
-            const response = await fetch(url);
+            const response = await fetch(url, {
+              headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              }
+            });
             
             if (response.ok) {
               data = await response.json();
-              console.log(`Previous ${config.name} Proxy API response:`, data);
-              
-              // Check if the response contains an error from CSGOBig API
-              if (data.code === 400 && data.status === 'INVALID_ARGUMENT') {
-                const errorMessage = data.details?.[0]?.reason || 'Invalid campaign code';
-                console.log(`Previous CSGOBig API Error: ${errorMessage}`);
-                throw new Error(`CSGOBig API Error: ${errorMessage}. Please check if someone has used the referral code.`);
-              }
+              console.log(`Previous ${config.name} API response:`, data);
             } else {
-              throw new Error(`Previous CSGOBig Proxy API failed with status: ${response.status}`);
+              throw new Error(`Previous CSGOBig API failed with status: ${response.status}`);
             }
           } catch (e) {
-            console.log(`Failed to fetch previous from CSGOBig Proxy API:`, e.message);
+            console.log(`Failed to fetch previous from CSGOBig API:`, e.message);
             throw new Error(`Previous CSGOBig API error: ${e.message}`);
           }
           
-          // CSGOBig data should already be in correct format from backend
+          // Transform CSGOBig data to match our format
+          const transformedResults = transformCSGOBigData(data);
+          data = { results: transformedResults };
         } else if (config.apiType === 'clash') {
           // Clash.gg API call - use detailed-summary for previous data with specific date
           try {
@@ -1291,14 +1288,7 @@
         renderLeaderboard(data.results || [], "dynamic-leaderboard", true, config.name);
       } catch (e) {
         console.error(`Error fetching previous ${config.name} leaderboard:`, e);
-        
-        // Show more user-friendly error message for CSGOBig
-        let errorMessage = `Failed to load previous ${config.name} leaderboard.`;
-        if (config.apiType === 'csgobig' && e.message.includes('Invalid campaign code')) {
-          errorMessage = `🔄 Previous CSGOBig leaderboard not available. No activity recorded for this period.`;
-        }
-        
-        document.getElementById("dynamic-leaderboard").innerHTML = `<div class="text-orange-400 mt-4 p-4 bg-orange-900/20 rounded-lg border border-orange-500/30">${errorMessage}</div>`;
+        document.getElementById("dynamic-leaderboard").innerHTML = `<div class="text-red-400 mt-4">Failed to load previous ${config.name} leaderboard.</div>`;
       }
     }
 
@@ -1311,11 +1301,11 @@
           // Clash.gg: start 22 września 2025 01:00, trwa 2 tygodnie = koniec 6 października 2025 01:00
           endDate = "2025-10-06T01:00:00.00Z";
         } else if (platform === 'csgobig') {
-          // CSGOBig: koniec 16 października 2025
-          endDate = "2025-10-16T23:59:59.99Z";
+          // CSGOBig: koniec 17 października 2025
+          endDate = "2025-10-17T23:59:59.99Z";
         } else {
-          // Rain.gg: nowy leaderboard kończy się 16 października 2025
-          endDate = "2025-10-16T23:59:59.99Z";
+          // Rain.gg: nowy leaderboard kończy się 17 października 2025
+          endDate = "2025-10-17T23:59:59.99Z";
         }
         startRaceTimer(endDate);
       }
