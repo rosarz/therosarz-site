@@ -1,36 +1,135 @@
-// In-memory cache for CSGOBig data with fallback mechanism
-const csgobigCache = {
-  data: null,
-  timestamp: null,
-  ttl: 15 * 60 * 1000, // 15 minutes in milliseconds
-  lastSuccessfulData: null // Fallback data jeśli API zawiedzie
-};
+import fs from 'fs';
+import path from 'path';
 
-// In-memory cache for Clash.gg data with fallback mechanism
-const clashCache = {
-  data: null,
-  timestamp: null,
-  ttl: 15 * 60 * 1000, // 15 minutes in milliseconds
-  lastSuccessfulData: null // Fallback data jeśli API zawiedzie
-};
+// Cache file paths
+const CACHE_DIR = path.join(process.cwd(), '.cache');
+const CSGOBIG_CACHE = path.join(CACHE_DIR, 'csgobig.json');
+const CLASH_CACHE = path.join(CACHE_DIR, 'clash.json');
+const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+
+// Ensure cache directory exists
+if (!fs.existsSync(CACHE_DIR)) {
+  fs.mkdirSync(CACHE_DIR, { recursive: true });
+}
+
+// Helper to read cache file
+function readCache(filePath) {
+  try {
+    if (fs.existsSync(filePath)) {
+      const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      return data;
+    }
+  } catch (e) {
+    console.error('Error reading cache:', e);
+  }
+  return null;
+}
+
+// Helper to write cache file
+function writeCache(filePath, data) {
+  try {
+    fs.writeFileSync(filePath, JSON.stringify({
+      data,
+      timestamp: Date.now()
+    }, null, 2));
+  } catch (e) {
+    console.error('Error writing cache:', e);
+  }
+}
+
+// Check if cache is valid
+function isCacheValid(cache) {
+  if (!cache || !cache.timestamp) return false;
+  return (Date.now() - cache.timestamp) < CACHE_TTL;
+}
 
 export default async function handler(req, res) {
   const { start_date, end_date, type, code, site } = req.query;
   
   try {
-    // Clash.gg handling with cache and fallback
-    if (site === 'clash') {
-      // Create cache key based on request parameters
-      const cacheKey = `${code}_${start_date}_${end_date}`;
-      const now = Date.now();
+    // CSGOBig handling with file-based cache
+    if (site === 'csgobig') {
+      const cache = readCache(CSGOBIG_CACHE);
       
-      // Check if we have valid cached data (< 15 min old)
-      if (clashCache.data && 
-          clashCache.timestamp && 
-          clashCache.cacheKey === cacheKey &&
-          (now - clashCache.timestamp) < clashCache.ttl) {
-        console.log('Returning cached Clash.gg data');
-        return res.status(200).json(clashCache.data);
+      // Return cached data if valid
+      if (isCacheValid(cache)) {
+        console.log('Serving CSGOBig data from file cache');
+        return res.status(200).json(cache.data);
+      }
+      
+      // Try to fetch fresh data
+      try {
+        const fromEpoch = new Date(start_date).getTime();
+        const toEpoch = new Date(end_date).getTime();
+        
+        const url = `https://csgobig.com/api/partners/getRefDetails/${code}?from=${fromEpoch}&to=${toEpoch}`;
+        console.log('Fetching fresh CSGOBig data from:', url);
+        
+        const response = await fetch(url, {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`CSGOBig API returned ${response.status}`);
+        }
+        
+        const csgobigData = await response.json();
+        
+        // Transform data
+        const results = (csgobigData.results || []).map(user => {
+          const username = user.name || '';
+          const visiblePart = username.slice(0, 2);
+          const stars = '*'.repeat(Math.max(0, Math.min(6, username.length - 2)));
+          const anonymized = (visiblePart + stars).slice(0, 8);
+          
+          return {
+            username: anonymized,
+            wagered: parseFloat(user.wagerTotal || 0),
+            avatar: user.img?.startsWith('http') ? user.img : `https://csgobig.com${user.img || '/assets/img/censored_avatar.png'}`
+          };
+        });
+        
+        results.sort((a, b) => b.wagered - a.wagered);
+        
+        const responseData = {
+          results: results,
+          prize_pool: "500$"
+        };
+        
+        // Save to cache file
+        writeCache(CSGOBIG_CACHE, responseData);
+        console.log('CSGOBig data saved to cache file');
+        
+        return res.status(200).json(responseData);
+        
+      } catch (fetchError) {
+        console.error('CSGOBig API fetch failed:', fetchError.message);
+        
+        // Return old cache data if available (even if expired)
+        if (cache && cache.data) {
+          console.log('Using expired CSGOBig cache as fallback');
+          return res.status(200).json({
+            ...cache.data,
+            _fallback: true,
+            _message: 'Using cached data due to API unavailability'
+          });
+        }
+        
+        throw new Error(`CSGOBig API error and no cache available: ${fetchError.message}`);
+      }
+    }
+    
+    // Clash.gg handling with file-based cache
+    if (site === 'clash') {
+      const cache = readCache(CLASH_CACHE);
+      
+      // Return cached data if valid
+      if (isCacheValid(cache)) {
+        console.log('Serving Clash.gg data from file cache');
+        return res.status(200).json(cache.data);
       }
       
       // Try to fetch fresh data
@@ -50,30 +149,13 @@ export default async function handler(req, res) {
         }
         
         const clashData = await response.json();
-        console.log('Clash.gg raw data:', clashData);
         
-        // Transform Clash.gg response to match Rain.gg format
-        // Extract leaderboard data
-        let leaderboards = clashData;
-        if (!Array.isArray(leaderboards)) {
-          leaderboards = [leaderboards];
-        }
-        
-        // Find target leaderboard (ID 841 or most recent)
-        let targetLeaderboard = leaderboards[0];
-        if (leaderboards.length > 1) {
-          const found = leaderboards.find(lb => lb.id === 841 || lb.id === '841');
-          if (found) {
-            targetLeaderboard = found;
-          } else {
-            targetLeaderboard = leaderboards.sort((a, b) => new Date(b.startDate) - new Date(a.startDate))[0];
-          }
-        }
-        
+        // Transform data (simplified - extract topPlayers)
+        let leaderboards = Array.isArray(clashData) ? clashData : [clashData];
+        let targetLeaderboard = leaderboards.find(lb => lb.id === 841) || leaderboards[0];
         const topPlayers = targetLeaderboard.topPlayers || [];
         
         const results = topPlayers.map(user => {
-          // Anonymize username (first 2 chars + stars)
           const username = user.username || user.name || '';
           const visiblePart = username.slice(0, 2);
           const stars = '*'.repeat(Math.max(0, Math.min(6, username.length - 2)));
@@ -81,143 +163,38 @@ export default async function handler(req, res) {
           
           return {
             username: anonymized,
-            wagered: parseFloat(user.wagered || user.wager || 0) / 100, // Convert from gem cents to gems
+            wagered: parseFloat(user.wagered || 0) / 100,
             avatar: user.avatar || user.avatarUrl || '../bot.png'
           };
         });
         
-        // Sort by wagered amount descending
         results.sort((a, b) => b.wagered - a.wagered);
         
         const responseData = {
           results: results,
-          prize_pool: "500$" // Clash.gg prize pool
+          prize_pool: "500$"
         };
         
-        // Update cache AND save as last successful data
-        clashCache.data = responseData;
-        clashCache.timestamp = now;
-        clashCache.cacheKey = cacheKey;
-        clashCache.lastSuccessfulData = responseData; // Save as fallback
-        
-        console.log('Clash.gg data cached for 15 minutes + saved as fallback');
+        // Save to cache file
+        writeCache(CLASH_CACHE, responseData);
+        console.log('Clash.gg data saved to cache file');
         
         return res.status(200).json(responseData);
         
       } catch (fetchError) {
-        // If fetch fails but we have old successful data, use it as fallback
         console.error('Clash.gg API fetch failed:', fetchError.message);
         
-        if (clashCache.lastSuccessfulData) {
-          console.log('Using last successful Clash.gg data as fallback');
-          
-          // Update timestamp to retry in 15 minutes
-          clashCache.timestamp = now;
-          clashCache.cacheKey = cacheKey;
-          
+        // Return old cache data if available
+        if (cache && cache.data) {
+          console.log('Using expired Clash.gg cache as fallback');
           return res.status(200).json({
-            ...clashCache.lastSuccessfulData,
-            _fallback: true, // Flag indicating this is fallback data
+            ...cache.data,
+            _fallback: true,
             _message: 'Using cached data due to API unavailability'
           });
         }
         
-        // If no fallback data exists, throw error
-        throw new Error(`Clash.gg API error and no fallback data available: ${fetchError.message}`);
-      }
-    }
-    
-    // CSGOBig handling
-    if (site === 'csgobig') {
-      // Create cache key based on request parameters
-      const cacheKey = `${code}_${start_date}_${end_date}`;
-      const now = Date.now();
-      
-      // Check if we have valid cached data (< 15 min old)
-      if (csgobigCache.data && 
-          csgobigCache.timestamp && 
-          csgobigCache.cacheKey === cacheKey &&
-          (now - csgobigCache.timestamp) < csgobigCache.ttl) {
-        console.log('Returning cached CSGOBig data');
-        return res.status(200).json(csgobigCache.data);
-      }
-      
-      // Try to fetch fresh data
-      try {
-        // Convert ISO dates to epoch milliseconds
-        const fromEpoch = new Date(start_date).getTime();
-        const toEpoch = new Date(end_date).getTime();
-        
-        const url = `https://csgobig.com/api/partners/getRefDetails/${code}?from=${fromEpoch}&to=${toEpoch}`;
-        
-        console.log('Fetching fresh CSGOBig data from:', url);
-        
-        const response = await fetch(url, {
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (!response.ok) {
-          throw new Error(`CSGOBig API returned ${response.status}`);
-        }
-        
-        const csgobigData = await response.json();
-        
-        // Transform CSGOBig response to match Rain.gg format
-        const results = (csgobigData.results || []).map(user => {
-          // Anonymize username (first 2 chars + stars)
-          const username = user.name || '';
-          const visiblePart = username.slice(0, 2);
-          const stars = '*'.repeat(Math.max(0, Math.min(6, username.length - 2)));
-          const anonymized = (visiblePart + stars).slice(0, 8);
-          
-          return {
-            username: anonymized,
-            wagered: parseFloat(user.wagerTotal || 0),
-            avatar: user.img?.startsWith('http') ? user.img : `https://csgobig.com${user.img || '/assets/img/censored_avatar.png'}`
-          };
-        });
-        
-        // Sort by wagered amount descending
-        results.sort((a, b) => b.wagered - a.wagered);
-        
-        const responseData = {
-          results: results,
-          prize_pool: "500$" // CSGOBig prize pool
-        };
-        
-        // Update cache AND save as last successful data
-        csgobigCache.data = responseData;
-        csgobigCache.timestamp = now;
-        csgobigCache.cacheKey = cacheKey;
-        csgobigCache.lastSuccessfulData = responseData; // Save as fallback
-        
-        console.log('CSGOBig data cached for 15 minutes + saved as fallback');
-        
-        return res.status(200).json(responseData);
-        
-      } catch (fetchError) {
-        // If fetch fails but we have old successful data, use it as fallback
-        console.error('CSGOBig API fetch failed:', fetchError.message);
-        
-        if (csgobigCache.lastSuccessfulData) {
-          console.log('Using last successful CSGOBig data as fallback');
-          
-          // Update timestamp to retry in 15 minutes
-          csgobigCache.timestamp = now;
-          csgobigCache.cacheKey = cacheKey;
-          
-          return res.status(200).json({
-            ...csgobigCache.lastSuccessfulData,
-            _fallback: true, // Flag indicating this is fallback data
-            _message: 'Using cached data due to API unavailability'
-          });
-        }
-        
-        // If no fallback data exists, throw error
-        throw new Error(`CSGOBig API error and no fallback data available: ${fetchError.message}`);
+        throw new Error(`Clash.gg API error and no cache available: ${fetchError.message}`);
       }
     }
     
