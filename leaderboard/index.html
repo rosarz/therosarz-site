@@ -1007,13 +1007,17 @@
             console.log('=== CSGOBIG API DEBUG START ===');
             console.log('Current date:', new Date().toISOString());
             console.log('Config dates:', config.startDate, 'to', config.endDate);
+            console.log('Referral code:', config.code);
             
-            console.log('Trying CSGOBig API through proxy with referral code:', config.code);
+            console.log('⚠️ IMPORTANT: Backend should NOT send "type" parameter to CSGOBig API');
+            console.log('⚠️ CSGOBig API only needs: start_date, end_date, code');
             
             // Use your backend API to proxy the CSGOBig request
             // CSGOBig doesn't need 'type' parameter like Rain.gg does
             const url = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&code=${config.code}&site=csgobig`;
-            console.log('CSGOBig Proxy API URL:', url);
+            console.log('Frontend -> Backend URL:', url);
+            console.log('Expected Backend -> CSGOBig params: {start_date, end_date, code}');
+            console.log('❌ Backend should NOT send: {type}');
             
             const response = await fetch(url);
             
@@ -1024,11 +1028,25 @@
               console.log(`${config.name} Proxy API JSON:`, data);
               
               // Check if the response contains an error from CSGOBig API
-              if (data.code === 400 && data.status === 'INVALID_ARGUMENT') {
-                const errorMessage = data.details?.[0]?.reason || 'Invalid campaign code';
+              if (data.code && data.status === 'INVALID_ARGUMENT') {
+                console.log('❌ CSGOBig API returned error');
+                console.log('Error details:', data.details);
+                
+                // Check if error is about 'type' parameter
+                const typeError = data.details?.find(d => d.field === 'type' || d.reason?.includes('type'));
+                if (typeError) {
+                  console.error('🔴 BACKEND ERROR: Your backend is still sending "type" parameter to CSGOBig API!');
+                  console.error('🔧 FIX: Update your backend to NOT send "type" when site=csgobig');
+                  throw new Error('Backend configuration error: Remove "type" parameter for CSGOBig API calls');
+                }
+                
+                const errorMessage = data.details?.[0]?.reason || data.details?.[0]?.message || 'Unknown error';
                 console.log(`CSGOBig API Error: ${errorMessage}`);
-                throw new Error(`CSGOBig API Error: ${errorMessage}. Please check if someone has used the referral code.`);
+                throw new Error(`CSGOBig API Error: ${errorMessage}`);
               }
+              
+              // Success - we got valid data
+              console.log('✅ CSGOBig API call successful');
             } else {
               const errorText = await response.text();
               console.log(`CSGOBig Proxy API failed with status ${response.status}:`, errorText);
@@ -1410,24 +1428,6 @@
   </script>
 </body>
 </html>
-          // Usunięcie klasy active ze wszystkich kontenerów przycisków
-          document.querySelectorAll('.site-selector').forEach(btn => btn.classList.remove('active'));
-          
-          // Dodanie klasy active do kontenera klikniętego przycisku
-          this.parentElement.classList.add('active');
-          
-          // Ustawienie nowej platformy
-          currentPlatform = this.dataset.platform;
-          
-          // Pobranie nowego leaderboardu
-          if (document.getElementById('current-btn').classList.contains('active')) {
-            fetchLeaderboard(currentPlatform);
-          } else if (document.getElementById('previous-btn').classList.contains('active')) {
-            fetchPreviousLeaderboard(currentPlatform);
-          }
-        });
-      });
-
       // Obsługa przycisków Current/Previous
       document.getElementById('current-btn').addEventListener('click', function() {
         this.classList.add('active');
