@@ -1021,7 +1021,7 @@
         csgobig: {
           startDate: "2025-10-03T00:00:00.00Z",
           endDate: "2025-10-17T23:59:59.99Z",
-          code: "ROSARZ8374JSDBJK384784983HDJSADBJHER",
+          code: "ROSARZ8374JSDBJK384784983HDJSADBJHER", // TODO: Verify this referral code
           name: "CSGOBig",
           defaultPrize: "500$",
           apiType: "csgobig"
@@ -1059,6 +1059,13 @@
             if (response.ok) {
               data = await response.json();
               console.log(`${config.name} Proxy API JSON:`, data);
+              
+              // Check if the response contains an error from CSGOBig API
+              if (data.code === 400 && data.status === 'INVALID_ARGUMENT') {
+                const errorMessage = data.details?.[0]?.reason || 'Invalid campaign code';
+                console.log(`CSGOBig API Error: ${errorMessage}`);
+                throw new Error(`CSGOBig API Error: ${errorMessage}. Please check if someone has used the referral code.`);
+              }
             } else {
               const errorText = await response.text();
               console.log(`CSGOBig Proxy API failed with status ${response.status}:`, errorText);
@@ -1160,7 +1167,14 @@
         renderLeaderboard(data.results || [], "dynamic-leaderboard", false, config.name);
       } catch (e) {
         console.error(`Error fetching ${config.name} leaderboard:`, e);
-        document.getElementById("dynamic-leaderboard").innerHTML = `<div class="text-red-400 mt-4">Failed to load ${config.name} leaderboard.</div>`;
+        
+        // Show more user-friendly error message for CSGOBig
+        let errorMessage = `Failed to load ${config.name} leaderboard.`;
+        if (config.apiType === 'csgobig' && e.message.includes('Invalid campaign code')) {
+          errorMessage = `🔄 CSGOBig leaderboard not available yet. Nobody has used the referral code or it needs to be activated first.`;
+        }
+        
+        document.getElementById("dynamic-leaderboard").innerHTML = `<div class="text-orange-400 mt-4 p-4 bg-orange-900/20 rounded-lg border border-orange-500/30">${errorMessage}</div>`;
       }
     }
 
@@ -1217,6 +1231,13 @@
             if (response.ok) {
               data = await response.json();
               console.log(`Previous ${config.name} Proxy API response:`, data);
+              
+              // Check if the response contains an error from CSGOBig API
+              if (data.code === 400 && data.status === 'INVALID_ARGUMENT') {
+                const errorMessage = data.details?.[0]?.reason || 'Invalid campaign code';
+                console.log(`Previous CSGOBig API Error: ${errorMessage}`);
+                throw new Error(`CSGOBig API Error: ${errorMessage}. Please check if someone has used the referral code.`);
+              }
             } else {
               throw new Error(`Previous CSGOBig Proxy API failed with status: ${response.status}`);
             }
@@ -1270,7 +1291,14 @@
         renderLeaderboard(data.results || [], "dynamic-leaderboard", true, config.name);
       } catch (e) {
         console.error(`Error fetching previous ${config.name} leaderboard:`, e);
-        document.getElementById("dynamic-leaderboard").innerHTML = `<div class="text-red-400 mt-4">Failed to load previous ${config.name} leaderboard.</div>`;
+        
+        // Show more user-friendly error message for CSGOBig
+        let errorMessage = `Failed to load previous ${config.name} leaderboard.`;
+        if (config.apiType === 'csgobig' && e.message.includes('Invalid campaign code')) {
+          errorMessage = `🔄 Previous CSGOBig leaderboard not available. No activity recorded for this period.`;
+        }
+        
+        document.getElementById("dynamic-leaderboard").innerHTML = `<div class="text-orange-400 mt-4 p-4 bg-orange-900/20 rounded-lg border border-orange-500/30">${errorMessage}</div>`;
       }
     }
 
@@ -1402,24 +1430,6 @@
 
       // Obsługa przycisków Current/Previous
       document.getElementById('current-btn').addEventListener('click', function() {
-        this.classList.add('active');
-        document.getElementById('previous-btn').classList.remove('active');
-        fetchLeaderboard(currentPlatform);
-      });
-
-      document.getElementById('previous-btn').addEventListener('click', function() {
-        this.classList.add('active');
-        document.getElementById('current-btn').classList.remove('active');
-        fetchPreviousLeaderboard(currentPlatform);
-      });
-
-      // Inicjalizacja - Rain.gg jako aktywny i załaduj current leaderboard
-      document.querySelector('[data-platform="rain"]').parentElement.classList.add('active');
-      fetchLeaderboard('rain');
-    });
-  </script>
-</body>
-</html>
         this.classList.add('active');
         document.getElementById('previous-btn').classList.remove('active');
         fetchLeaderboard(currentPlatform);
