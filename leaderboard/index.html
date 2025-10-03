@@ -1034,42 +1034,23 @@
         let data;
         
         if (config.apiType === 'csgobig') {
-          // CSGOBig API call
+          // CSGOBig API call - użyj proxy podobnie jak Rain.gg
           try {
             console.log('=== CSGOBIG API DEBUG START ===');
             console.log('Current date:', new Date().toISOString());
             console.log('Config dates:', config.startDate, 'to', config.endDate);
             
-            // Convert dates to epoch milliseconds
-            const fromEpoch = new Date(config.startDate).getTime();
-            const toEpoch = new Date(config.endDate).getTime();
+            // Użyj Twojego API proxy zamiast bezpośredniego wywołania
+            const url = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&type=wagered&code=${config.code}&site=csgobig`;
+            console.log('CSGOBig API URL (via proxy):', url);
             
-            console.log('Epoch timestamps:', fromEpoch, 'to', toEpoch);
-            console.log('Trying CSGOBig API with referral code:', config.code);
-            
-            const url = `https://csgobig.com/api/partners/getRefDetails/${config.code}?from=${fromEpoch}&to=${toEpoch}`;
-            console.log('CSGOBig API URL:', url);
-            
-            const response = await fetch(url, {
-              headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-              }
-            });
+            const response = await fetch(url);
             
             console.log('CSGOBig API response status:', response.status);
-            console.log('Response headers:', [...response.headers.entries()]);
             
             if (response.ok) {
-              const responseText = await response.text();
-              console.log('Raw response text:', responseText);
-              try {
-                data = JSON.parse(responseText);
-                console.log(`${config.name} API JSON:`, data);
-              } catch (parseError) {
-                console.error('JSON parse error:', parseError);
-                throw new Error('Invalid JSON response from CSGOBig API');
-              }
+              data = await response.json();
+              console.log(`${config.name} API JSON:`, data);
             } else {
               const errorText = await response.text();
               console.log(`CSGOBig API failed with status ${response.status}:`, errorText);
@@ -1081,9 +1062,8 @@
             throw new Error(`CSGOBig API error: ${e.message}`);
           }
           
-          // Transform CSGOBig data to match our format
-          const transformedResults = transformCSGOBigData(data);
-          data = { results: transformedResults };
+          // Dane już są w odpowiednim formacie z API proxy
+          // Nie trzeba transformować
         } else if (config.apiType === 'clash') {
           // Clash.gg API call - use authorized endpoints
           try {
@@ -1212,23 +1192,14 @@
         let data;
         
         if (config.apiType === 'csgobig') {
-          // CSGOBig API call for previous period
+          // CSGOBig API call for previous period - użyj proxy
           try {
-            console.log(`Trying previous CSGOBig API`);
+            console.log(`Trying previous CSGOBig API via proxy`);
             
-            // Convert dates to epoch milliseconds
-            const fromEpoch = new Date(config.startDate).getTime();
-            const toEpoch = new Date(config.endDate).getTime();
+            const url = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&type=wagered&code=${config.code}&site=csgobig`;
+            console.log('Previous CSGOBig API URL (via proxy):', url);
             
-            const url = `https://csgobig.com/api/partners/getRefDetails/${config.code}?from=${fromEpoch}&to=${toEpoch}`;
-            console.log('Previous CSGOBig API URL:', url);
-            
-            const response = await fetch(url, {
-              headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-              }
-            });
+            const response = await fetch(url);
             
             if (response.ok) {
               data = await response.json();
@@ -1241,9 +1212,7 @@
             throw new Error(`Previous CSGOBig API error: ${e.message}`);
           }
           
-          // Transform CSGOBig data to match our format
-          const transformedResults = transformCSGOBigData(data);
-          data = { results: transformedResults };
+          // Dane już są w odpowiednim formacie z API proxy
         } else if (config.apiType === 'clash') {
           // Clash.gg API call - use detailed-summary for previous data with specific date
           try {
@@ -1407,6 +1376,37 @@
           this.parentElement.classList.add('active');
           
           // Ustawienie nowej platformy
+          currentPlatform = this.dataset.platform;
+          
+          // Pobranie nowego leaderboardu
+          if (document.getElementById('current-btn').classList.contains('active')) {
+            fetchLeaderboard(currentPlatform);
+          } else if (document.getElementById('previous-btn').classList.contains('active')) {
+            fetchPreviousLeaderboard(currentPlatform);
+          }
+        });
+      });
+
+      // Obsługa przycisków Current/Previous
+      document.getElementById('current-btn').addEventListener('click', function() {
+        this.classList.add('active');
+        document.getElementById('previous-btn').classList.remove('active');
+        fetchLeaderboard(currentPlatform);
+      });
+
+      document.getElementById('previous-btn').addEventListener('click', function() {
+        this.classList.add('active');
+        document.getElementById('current-btn').classList.remove('active');
+        fetchPreviousLeaderboard(currentPlatform);
+      });
+
+      // Inicjalizacja - Rain.gg jako aktywny i załaduj current leaderboard
+      document.querySelector('[data-platform="rain"]').parentElement.classList.add('active');
+      fetchLeaderboard('rain');
+    });
+  </script>
+</body>
+</html>
           currentPlatform = this.dataset.platform;
           
           // Pobranie nowego leaderboardu
