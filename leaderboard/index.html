@@ -1432,19 +1432,4 @@
   </script>
 </body>
 </html>
-        fetchLeaderboard(currentPlatform);
-      });
 
-      document.getElementById('previous-btn').addEventListener('click', function() {
-        this.classList.add('active');
-        document.getElementById('current-btn').classList.remove('active');
-        fetchPreviousLeaderboard(currentPlatform);
-      });
-
-      // Inicjalizacja - Rain.gg jako aktywny i załaduj current leaderboard
-      document.querySelector('[data-platform="rain"]').parentElement.classList.add('active');
-      fetchLeaderboard('rain');
-    });
-  </script>
-</body>
-</html>
