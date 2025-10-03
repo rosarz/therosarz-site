@@ -1,60 +1,31 @@
-import fs from 'fs';
 import path from 'path';
 
-// Cache file paths
-const CACHE_DIR = path.join(process.cwd(), '.cache');
-const CSGOBIG_CACHE = path.join(CACHE_DIR, 'csgobig.json');
-const CLASH_CACHE = path.join(CACHE_DIR, 'clash.json');
+// In-memory cache (resetuje się przy każdym cold start, ale działa)
+const memoryCache = {
+  csgobig: { data: null, timestamp: null },
+  clash: { data: null, timestamp: null }
+};
+
 const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 
-// Ensure cache directory exists
-if (!fs.existsSync(CACHE_DIR)) {
-  fs.mkdirSync(CACHE_DIR, { recursive: true });
-}
-
-// Helper to read cache file
-function readCache(filePath) {
-  try {
-    if (fs.existsSync(filePath)) {
-      const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-      return data;
-    }
-  } catch (e) {
-    console.error('Error reading cache:', e);
-  }
-  return null;
-}
-
-// Helper to write cache file
-function writeCache(filePath, data) {
-  try {
-    fs.writeFileSync(filePath, JSON.stringify({
-      data,
-      timestamp: Date.now()
-    }, null, 2));
-  } catch (e) {
-    console.error('Error writing cache:', e);
-  }
-}
-
 // Check if cache is valid
-function isCacheValid(cache) {
-  if (!cache || !cache.timestamp) return false;
-  return (Date.now() - cache.timestamp) < CACHE_TTL;
+function isCacheValid(cacheEntry) {
+  if (!cacheEntry || !cacheEntry.timestamp) return false;
+  return (Date.now() - cacheEntry.timestamp) < CACHE_TTL;
 }
 
 export default async function handler(req, res) {
   const { start_date, end_date, type, code, site } = req.query;
   
   try {
-    // Clash.gg handling with file-based cache
+    // Clash.gg handling with memory cache
     if (site === 'clash') {
-      const cache = readCache(CLASH_CACHE);
+      const cacheEntry = memoryCache.clash;
       
       // Return cached data if valid
-      if (isCacheValid(cache)) {
-        console.log('Serving Clash.gg data from file cache');
-        return res.status(200).json(cache.data);
+      if (isCacheValid(cacheEntry)) {
+        console.log('Serving Clash.gg data from memory cache');
+        return res.status(200).json(cacheEntry.data);
       }
       
       // Try to fetch fresh data
@@ -75,10 +46,10 @@ export default async function handler(req, res) {
         
         const clashData = await response.json();
         
-        // Transform data (simplified - extract topPlayers)
+        // Transform data
         let leaderboards = Array.isArray(clashData) ? clashData : [clashData];
         let targetLeaderboard = leaderboards.find(lb => lb.id === 841) || leaderboards[0];
-        const topPlayers = targetLeaderboard.topPlayers || [];
+        const topPlayers = targetLeaderboard?.topPlayers || [];
         
         const results = topPlayers.map(user => {
           const username = user.username || user.name || '';
@@ -100,20 +71,24 @@ export default async function handler(req, res) {
           prize_pool: "500$"
         };
         
-        // Save to cache file
-        writeCache(CLASH_CACHE, responseData);
-        console.log('Clash.gg data saved to cache file');
+        // Save to memory cache
+        memoryCache.clash = {
+          data: responseData,
+          timestamp: Date.now()
+        };
+        
+        console.log('Clash.gg data cached in memory');
         
         return res.status(200).json(responseData);
         
       } catch (fetchError) {
         console.error('Clash.gg API fetch failed:', fetchError.message);
         
-        // Return old cache data if available
-        if (cache && cache.data) {
+        // Return old cache data if available (even if expired)
+        if (cacheEntry && cacheEntry.data) {
           console.log('Using expired Clash.gg cache as fallback');
           return res.status(200).json({
-            ...cache.data,
+            ...cacheEntry.data,
             _fallback: true,
             _message: 'Using cached data due to API unavailability'
           });
@@ -123,14 +98,14 @@ export default async function handler(req, res) {
       }
     }
     
-    // CSGOBig handling with file-based cache
+    // CSGOBig handling with memory cache
     if (site === 'csgobig') {
-      const cache = readCache(CSGOBIG_CACHE);
+      const cacheEntry = memoryCache.csgobig;
       
       // Return cached data if valid
-      if (isCacheValid(cache)) {
-        console.log('Serving CSGOBig data from file cache');
-        return res.status(200).json(cache.data);
+      if (isCacheValid(cacheEntry)) {
+        console.log('Serving CSGOBig data from memory cache');
+        return res.status(200).json(cacheEntry.data);
       }
       
       // Try to fetch fresh data
@@ -175,20 +150,24 @@ export default async function handler(req, res) {
           prize_pool: "500$"
         };
         
-        // Save to cache file
-        writeCache(CSGOBIG_CACHE, responseData);
-        console.log('CSGOBig data saved to cache file');
+        // Save to memory cache
+        memoryCache.csgobig = {
+          data: responseData,
+          timestamp: Date.now()
+        };
+        
+        console.log('CSGOBig data cached in memory');
         
         return res.status(200).json(responseData);
         
       } catch (fetchError) {
         console.error('CSGOBig API fetch failed:', fetchError.message);
         
-        // Return old cache data if available
-        if (cache && cache.data) {
+        // Return old cache data if available (even if expired)
+        if (cacheEntry && cacheEntry.data) {
           console.log('Using expired CSGOBig cache as fallback');
           return res.status(200).json({
-            ...cache.data,
+            ...cacheEntry.data,
             _fallback: true,
             _message: 'Using cached data due to API unavailability'
           });
@@ -198,7 +177,7 @@ export default async function handler(req, res) {
       }
     }
     
-    // Rain.gg handling (default) - site === 'rain' or no site parameter
+    // Rain.gg handling (default)
     const API_KEY = process.env.RAIN_API_KEY;
     const url = `https://api.rain.gg/v1/affiliates/leaderboard?start_date=${encodeURIComponent(start_date)}&end_date=${encodeURIComponent(end_date)}&type=${encodeURIComponent(type)}&code=${encodeURIComponent(code)}`;
     
