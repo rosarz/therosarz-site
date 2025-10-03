@@ -683,68 +683,36 @@
         return [];
       }
       
-      // Log all top-level keys to understand the structure
-      if (typeof csgobigData === 'object' && !Array.isArray(csgobigData)) {
-        console.log('📋 Top-level keys in csgobigData:', Object.keys(csgobigData));
-      }
+      // Sprawdź czy mamy strukturę {success: true, leaderboard: {participants: []}}
+      let participants = [];
       
-      // Try different possible data structures from CSGOBig API
-      let users = csgobigData.referrals || csgobigData.users || csgobigData.data || csgobigData.results || csgobigData.leaderboard || csgobigData;
-      console.log('🔍 Users after initial extraction:', users);
-      console.log('🔍 Users type:', typeof users, 'IsArray:', Array.isArray(users));
-      
-      // If it's still an object, try to find the user array
-      if (!Array.isArray(users)) {
-        console.log('⚠️ Data is not array, exploring deeper...');
-        
-        if (typeof users === 'object' && users !== null) {
-          console.log('🔎 Available fields in users object:', Object.keys(users));
-          
-          // Try common field names for CSGOBig
-          if (users.entries) {
-            users = users.entries;
-            console.log('✅ Found entries field');
-          } else if (users.participants) {
-            users = users.participants;
-            console.log('✅ Found participants field');
-          } else if (users.players) {
-            users = users.players;
-            console.log('✅ Found players field');
-          } else if (users.items) {
-            users = users.items;
-            console.log('✅ Found items field');
-          } else if (users.referralStats) {
-            users = users.referralStats;
-            console.log('✅ Found referralStats field');
-          } else {
-            console.log('❌ Could not find user array in CSGOBig response');
-            console.log('🔍 Full object structure:', JSON.stringify(users, null, 2));
-            return [];
-          }
-        }
-      }
-      
-      if (!Array.isArray(users)) {
-        console.log('❌ Still not an array after transformation attempts');
-        console.log('Final users value:', users);
+      if (csgobigData.success && csgobigData.leaderboard && Array.isArray(csgobigData.leaderboard.participants)) {
+        console.log('✅ Found CSGOBig participants structure');
+        participants = csgobigData.leaderboard.participants;
+      } else if (Array.isArray(csgobigData)) {
+        console.log('✅ Found direct array structure');
+        participants = csgobigData;
+      } else {
+        console.log('❌ Could not find participants in CSGOBig response');
+        console.log('🔍 Full object structure:', JSON.stringify(csgobigData, null, 2));
         return [];
       }
       
-      console.log(`✅ Found ${users.length} users in CSGOBig data`);
+      console.log(`✅ Found ${participants.length} participants in CSGOBig data`);
       
-      const transformedUsers = users.map((user, index) => {
-        console.log(`👤 Raw user ${index + 1} data:`, user);
-        console.log(`🔑 Available user fields:`, Object.keys(user));
+      const transformedUsers = participants.map((participant, index) => {
+        console.log(`👤 Raw participant ${index + 1} data:`, participant);
         
-        // Try multiple field variations for each property
-        const username = user.username || user.name || user.user || user.displayName || user.player_name || user.nick || user.handle || user.playerName || user.userId || user.steamId || `User ${index + 1}`;
+        // CSGOBig używa różnych nazw pól niż Rain.gg
+        const username = participant.name || participant.username || `User ${index + 1}`;
         
-        // Try multiple variations for wagered amount - CSGOBig might use different field names
-        const rawWagered = user.wagered || user.wager || user.totalWager || user.amount || user.value || user.total_wagered || user.totalAmount || user.wager_amount || user.bet_amount || user.volume || user.totalWagered || user.wagerAmount || user.totalVolume || user.deposited || user.totalDeposited || 0;
-        const wagered = parseFloat(rawWagered) / 100; // Convert from cents to dollars if needed
+        // wagerTotal jest już w prawidłowym formacie
+        const wagered = parseFloat(participant.wagerTotal || participant.wagered || 0);
         
-        // Try multiple variations for avatar
-        const avatar = user.avatar || user.avatarUrl || user.profilePicture || user.profile_picture || user.image || user.profileImage || user.steamAvatar || '../bot.png';
+        // Użyj img z CSGOBig lub domyślny avatar
+        const avatar = participant.img && !participant.img.includes('/assets/img/censored_avatar.png') 
+          ? participant.img 
+          : '../bot.png';
         
         const result = {
           username,
@@ -752,7 +720,7 @@
           avatar
         };
         
-        console.log(`✨ Transformed user ${index + 1}:`, result);
+        console.log(`✨ Transformed participant ${index + 1}:`, result);
         return result;
       });
       
@@ -1040,16 +1008,11 @@
             console.log('Current date:', new Date().toISOString());
             console.log('Config dates:', config.startDate, 'to', config.endDate);
             
-            // Convert dates to epoch milliseconds for CSGOBig API
-            const fromEpoch = new Date(config.startDate).getTime();
-            const toEpoch = new Date(config.endDate).getTime();
-            
-            console.log('Epoch timestamps:', fromEpoch, 'to', toEpoch);
             console.log('Trying CSGOBig API through proxy with referral code:', config.code);
             
             // Use your backend API to proxy the CSGOBig request
-            const TYPE = "wagered";
-            const url = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&type=${TYPE}&code=${config.code}&site=csgobig&from_epoch=${fromEpoch}&to_epoch=${toEpoch}`;
+            // Nie potrzebujemy epoch timestamps dla CSGOBig - używają normalnych dat
+            const url = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&code=${config.code}&site=csgobig`;
             console.log('CSGOBig Proxy API URL:', url);
             
             const response = await fetch(url);
@@ -1077,8 +1040,9 @@
             throw new Error(`CSGOBig API error: ${e.message}`);
           }
           
-          // CSGOBig data should already be in the correct format from your backend
-          // No need to transform if your backend handles the transformation
+          // Transform CSGOBig data to match our format
+          const transformedResults = transformCSGOBigData(data);
+          data = { results: transformedResults };
         } else if (config.apiType === 'clash') {
           // Clash.gg API call - use authorized endpoints
           try {
@@ -1218,12 +1182,7 @@
           try {
             console.log(`Trying previous CSGOBig API through proxy`);
             
-            // Convert dates to epoch milliseconds
-            const fromEpoch = new Date(config.startDate).getTime();
-            const toEpoch = new Date(config.endDate).getTime();
-            
-            const TYPE = "wagered";
-            const url = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&type=${TYPE}&code=${config.code}&site=csgobig&from_epoch=${fromEpoch}&to_epoch=${toEpoch}`;
+            const url = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&code=${config.code}&site=csgobig`;
             console.log('Previous CSGOBig Proxy API URL:', url);
             
             const response = await fetch(url);
@@ -1246,7 +1205,9 @@
             throw new Error(`Previous CSGOBig API error: ${e.message}`);
           }
           
-          // CSGOBig data should already be in correct format from backend
+          // Transform CSGOBig data to match our format
+          const transformedResults = transformCSGOBigData(data);
+          data = { results: transformedResults };
         } else if (config.apiType === 'clash') {
           // Clash.gg API call - use detailed-summary for previous data with specific date
           try {
@@ -1409,6 +1370,45 @@
       let currentPlatform = 'rain';
 
       platformButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          // Usunięcie klasy active ze wszystkich kontenerów przycisków
+          document.querySelectorAll('.site-selector').forEach(btn => btn.classList.remove('active'));
+          
+          // Dodanie klasy active do kontenera klikniętego przycisku
+          this.parentElement.classList.add('active');
+          
+          // Ustawienie nowej platformy
+          currentPlatform = this.dataset.platform;
+          
+          // Pobranie nowego leaderboardu
+          if (document.getElementById('current-btn').classList.contains('active')) {
+            fetchLeaderboard(currentPlatform);
+          } else if (document.getElementById('previous-btn').classList.contains('active')) {
+            fetchPreviousLeaderboard(currentPlatform);
+          }
+        });
+      });
+
+      // Obsługa przycisków Current/Previous
+      document.getElementById('current-btn').addEventListener('click', function() {
+        this.classList.add('active');
+        document.getElementById('previous-btn').classList.remove('active');
+        fetchLeaderboard(currentPlatform);
+      });
+
+      document.getElementById('previous-btn').addEventListener('click', function() {
+        this.classList.add('active');
+        document.getElementById('current-btn').classList.remove('active');
+        fetchPreviousLeaderboard(currentPlatform);
+      });
+
+      // Inicjalizacja - Rain.gg jako aktywny i załaduj current leaderboard
+      document.querySelector('[data-platform="rain"]').parentElement.classList.add('active');
+      fetchLeaderboard('rain');
+    });
+  </script>
+</body>
+</html>
         button.addEventListener('click', function() {
           // Usunięcie klasy active ze wszystkich kontenerów przycisków
           document.querySelectorAll('.site-selector').forEach(btn => btn.classList.remove('active'));
