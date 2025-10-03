@@ -683,36 +683,68 @@
         return [];
       }
       
-      // Sprawdź czy mamy strukturę {success: true, leaderboard: {participants: []}}
-      let participants = [];
+      // Log all top-level keys to understand the structure
+      if (typeof csgobigData === 'object' && !Array.isArray(csgobigData)) {
+        console.log('📋 Top-level keys in csgobigData:', Object.keys(csgobigData));
+      }
       
-      if (csgobigData.success && csgobigData.leaderboard && Array.isArray(csgobigData.leaderboard.participants)) {
-        console.log('✅ Found CSGOBig participants structure');
-        participants = csgobigData.leaderboard.participants;
-      } else if (Array.isArray(csgobigData)) {
-        console.log('✅ Found direct array structure');
-        participants = csgobigData;
-      } else {
-        console.log('❌ Could not find participants in CSGOBig response');
-        console.log('🔍 Full object structure:', JSON.stringify(csgobigData, null, 2));
+      // Try different possible data structures from CSGOBig API
+      let users = csgobigData.referrals || csgobigData.users || csgobigData.data || csgobigData.results || csgobigData.leaderboard || csgobigData;
+      console.log('🔍 Users after initial extraction:', users);
+      console.log('🔍 Users type:', typeof users, 'IsArray:', Array.isArray(users));
+      
+      // If it's still an object, try to find the user array
+      if (!Array.isArray(users)) {
+        console.log('⚠️ Data is not array, exploring deeper...');
+        
+        if (typeof users === 'object' && users !== null) {
+          console.log('🔎 Available fields in users object:', Object.keys(users));
+          
+          // Try common field names for CSGOBig
+          if (users.entries) {
+            users = users.entries;
+            console.log('✅ Found entries field');
+          } else if (users.participants) {
+            users = users.participants;
+            console.log('✅ Found participants field');
+          } else if (users.players) {
+            users = users.players;
+            console.log('✅ Found players field');
+          } else if (users.items) {
+            users = users.items;
+            console.log('✅ Found items field');
+          } else if (users.referralStats) {
+            users = users.referralStats;
+            console.log('✅ Found referralStats field');
+          } else {
+            console.log('❌ Could not find user array in CSGOBig response');
+            console.log('🔍 Full object structure:', JSON.stringify(users, null, 2));
+            return [];
+          }
+        }
+      }
+      
+      if (!Array.isArray(users)) {
+        console.log('❌ Still not an array after transformation attempts');
+        console.log('Final users value:', users);
         return [];
       }
       
-      console.log(`✅ Found ${participants.length} participants in CSGOBig data`);
+      console.log(`✅ Found ${users.length} users in CSGOBig data`);
       
-      const transformedUsers = participants.map((participant, index) => {
-        console.log(`👤 Raw participant ${index + 1} data:`, participant);
+      const transformedUsers = users.map((user, index) => {
+        console.log(`👤 Raw user ${index + 1} data:`, user);
+        console.log(`🔑 Available user fields:`, Object.keys(user));
         
-        // CSGOBig używa różnych nazw pól niż Rain.gg
-        const username = participant.name || participant.username || `User ${index + 1}`;
+        // Try multiple field variations for each property
+        const username = user.username || user.name || user.user || user.displayName || user.player_name || user.nick || user.handle || user.playerName || user.userId || user.steamId || `User ${index + 1}`;
         
-        // wagerTotal jest już w prawidłowym formacie
-        const wagered = parseFloat(participant.wagerTotal || participant.wagered || 0);
+        // Try multiple variations for wagered amount - CSGOBig might use different field names
+        const rawWagered = user.wagered || user.wager || user.totalWager || user.amount || user.value || user.total_wagered || user.totalAmount || user.wager_amount || user.bet_amount || user.volume || user.totalWagered || user.wagerAmount || user.totalVolume || user.deposited || user.totalDeposited || 0;
+        const wagered = parseFloat(rawWagered) / 100; // Convert from cents to dollars if needed
         
-        // Użyj img z CSGOBig lub domyślny avatar
-        const avatar = participant.img && !participant.img.includes('/assets/img/censored_avatar.png') 
-          ? participant.img 
-          : '../bot.png';
+        // Try multiple variations for avatar
+        const avatar = user.avatar || user.avatarUrl || user.profilePicture || user.profile_picture || user.image || user.profileImage || user.steamAvatar || '../bot.png';
         
         const result = {
           username,
@@ -720,7 +752,7 @@
           avatar
         };
         
-        console.log(`✨ Transformed participant ${index + 1}:`, result);
+        console.log(`✨ Transformed user ${index + 1}:`, result);
         return result;
       });
       
@@ -1007,15 +1039,18 @@
             console.log('=== CSGOBIG API DEBUG START ===');
             console.log('Current date:', new Date().toISOString());
             console.log('Config dates:', config.startDate, 'to', config.endDate);
-            console.log('Referral code:', config.code);
             
-            console.log('⚠️ IMPORTANT: Backend should NOT send "type" parameter to CSGOBig API');
+            // Convert dates to epoch milliseconds for CSGOBig API
+            const fromEpoch = new Date(config.startDate).getTime();
+            const toEpoch = new Date(config.endDate).getTime();
+            
+            console.log('Epoch timestamps:', fromEpoch, 'to', toEpoch);
+            console.log('Trying CSGOBig API through proxy with referral code:', config.code);
             
             // Use your backend API to proxy the CSGOBig request
-            // Add 'skip_type=true' to tell backend not to send 'type' parameter
-            const url = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&code=${config.code}&site=csgobig&skip_type=true`;
-            console.log('Frontend -> Backend URL:', url);
-            console.log('Backend should filter out "type" parameter for CSGOBig');
+            const TYPE = "wagered";
+            const url = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&type=${TYPE}&code=${config.code}&site=csgobig&from_epoch=${fromEpoch}&to_epoch=${toEpoch}`;
+            console.log('CSGOBig Proxy API URL:', url);
             
             const response = await fetch(url);
             
@@ -1026,26 +1061,11 @@
               console.log(`${config.name} Proxy API JSON:`, data);
               
               // Check if the response contains an error from CSGOBig API
-              if (data.code && data.status === 'INVALID_ARGUMENT') {
-                console.log('❌ CSGOBig API returned error');
-                console.log('Error details:', data.details);
-                
-                // Check if error is about 'type' parameter
-                const typeError = data.details?.find(d => d.type?.includes('type') || d.reason?.includes('type') || d.message?.includes('type'));
-                if (typeError) {
-                  console.error('🔴 BACKEND STILL SENDING "type" PARAMETER!');
-                  console.error('🔧 FIX YOUR BACKEND: It should NOT send "type" when site=csgobig');
-                  console.error('Full error details:', data.details);
-                  throw new Error('Backend configuration error: Backend is still sending "type" parameter to CSGOBig API. Please fix your backend code.');
-                }
-                
-                const errorMessage = data.details?.[0]?.reason || data.details?.[0]?.message || 'Unknown error';
+              if (data.code === 400 && data.status === 'INVALID_ARGUMENT') {
+                const errorMessage = data.details?.[0]?.reason || 'Invalid campaign code';
                 console.log(`CSGOBig API Error: ${errorMessage}`);
-                throw new Error(`CSGOBig API Error: ${errorMessage}`);
+                throw new Error(`CSGOBig API Error: ${errorMessage}. Please check if someone has used the referral code.`);
               }
-              
-              // Success - we got valid data
-              console.log('✅ CSGOBig API call successful');
             } else {
               const errorText = await response.text();
               console.log(`CSGOBig Proxy API failed with status ${response.status}:`, errorText);
@@ -1057,9 +1077,8 @@
             throw new Error(`CSGOBig API error: ${e.message}`);
           }
           
-          // Transform CSGOBig data to match our format
-          const transformedResults = transformCSGOBigData(data);
-          data = { results: transformedResults };
+          // CSGOBig data should already be in the correct format from your backend
+          // No need to transform if your backend handles the transformation
         } else if (config.apiType === 'clash') {
           // Clash.gg API call - use authorized endpoints
           try {
@@ -1199,8 +1218,12 @@
           try {
             console.log(`Trying previous CSGOBig API through proxy`);
             
-            // Add 'skip_type=true' to tell backend not to send 'type' parameter
-            const url = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&code=${config.code}&site=csgobig&skip_type=true`;
+            // Convert dates to epoch milliseconds
+            const fromEpoch = new Date(config.startDate).getTime();
+            const toEpoch = new Date(config.endDate).getTime();
+            
+            const TYPE = "wagered";
+            const url = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&type=${TYPE}&code=${config.code}&site=csgobig&from_epoch=${fromEpoch}&to_epoch=${toEpoch}`;
             console.log('Previous CSGOBig Proxy API URL:', url);
             
             const response = await fetch(url);
@@ -1210,15 +1233,10 @@
               console.log(`Previous ${config.name} Proxy API response:`, data);
               
               // Check if the response contains an error from CSGOBig API
-              if (data.code && data.status === 'INVALID_ARGUMENT') {
-                const typeError = data.details?.find(d => d.type?.includes('type') || d.reason?.includes('type') || d.message?.includes('type'));
-                if (typeError) {
-                  console.error('🔴 BACKEND STILL SENDING "type" PARAMETER FOR PREVIOUS PERIOD!');
-                  throw new Error('Backend configuration error: Remove "type" parameter for CSGOBig');
-                }
-                
-                const errorMessage = data.details?.[0]?.reason || data.details?.[0]?.message || 'Unknown error';
-                throw new Error(`CSGOBig API Error: ${errorMessage}`);
+              if (data.code === 400 && data.status === 'INVALID_ARGUMENT') {
+                const errorMessage = data.details?.[0]?.reason || 'Invalid campaign code';
+                console.log(`Previous CSGOBig API Error: ${errorMessage}`);
+                throw new Error(`CSGOBig API Error: ${errorMessage}. Please check if someone has used the referral code.`);
               }
             } else {
               throw new Error(`Previous CSGOBig Proxy API failed with status: ${response.status}`);
@@ -1228,9 +1246,7 @@
             throw new Error(`Previous CSGOBig API error: ${e.message}`);
           }
           
-          // Transform CSGOBig data to match our format
-          const transformedResults = transformCSGOBigData(data);
-          data = { results: transformedResults };
+          // CSGOBig data should already be in correct format from backend
         } else if (config.apiType === 'clash') {
           // Clash.gg API call - use detailed-summary for previous data with specific date
           try {
