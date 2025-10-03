@@ -1011,7 +1011,7 @@
             console.log('Trying CSGOBig API through proxy with referral code:', config.code);
             
             // Use your backend API to proxy the CSGOBig request
-            // Nie potrzebujemy epoch timestamps dla CSGOBig - używają normalnych dat
+            // CSGOBig doesn't need 'type' parameter like Rain.gg does
             const url = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&code=${config.code}&site=csgobig`;
             console.log('CSGOBig Proxy API URL:', url);
             
@@ -1182,6 +1182,7 @@
           try {
             console.log(`Trying previous CSGOBig API through proxy`);
             
+            // CSGOBig doesn't need 'type' parameter like Rain.gg does
             const url = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&code=${config.code}&site=csgobig`;
             console.log('Previous CSGOBig Proxy API URL:', url);
             
@@ -1409,7 +1410,6 @@
   </script>
 </body>
 </html>
-        button.addEventListener('click', function() {
           // Usunięcie klasy active ze wszystkich kontenerów przycisków
           document.querySelectorAll('.site-selector').forEach(btn => btn.classList.remove('active'));
           
