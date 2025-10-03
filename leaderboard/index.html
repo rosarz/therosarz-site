@@ -847,7 +847,7 @@
         coinIcon = "../clash_gem.png";
       } else if (siteName.toLowerCase().includes('csgobig')) {
         // Nagrody dla CSGOBig - podobne do Clash.gg
-        rewards = [200, 100, 75, 50, 25, 20, 15, 10, 5]; // Miejsca 1-9
+        rewards = [300, 150, 125, 75, 50, 25, 15, 10]; // Miejsca 1-8
         coinIcon = "../coin.png"; // Użyj domyślnej ikony monety lub dodaj specjalną dla CSGOBig
       } else {
         // Nagrody dla Rain.gg (oryginalne)
@@ -1023,7 +1023,7 @@
           endDate: "2025-10-17T23:59:59.99Z",
           code: "ROSARZ8374JSDBJK384784983HDJSADBJHER",
           name: "CSGOBig",
-          defaultPrize: "500$",
+          defaultPrize: "750$",
           apiType: "csgobig"
         }
       };
@@ -1376,37 +1376,6 @@
           this.parentElement.classList.add('active');
           
           // Ustawienie nowej platformy
-          currentPlatform = this.dataset.platform;
-          
-          // Pobranie nowego leaderboardu
-          if (document.getElementById('current-btn').classList.contains('active')) {
-            fetchLeaderboard(currentPlatform);
-          } else if (document.getElementById('previous-btn').classList.contains('active')) {
-            fetchPreviousLeaderboard(currentPlatform);
-          }
-        });
-      });
-
-      // Obsługa przycisków Current/Previous
-      document.getElementById('current-btn').addEventListener('click', function() {
-        this.classList.add('active');
-        document.getElementById('previous-btn').classList.remove('active');
-        fetchLeaderboard(currentPlatform);
-      });
-
-      document.getElementById('previous-btn').addEventListener('click', function() {
-        this.classList.add('active');
-        document.getElementById('current-btn').classList.remove('active');
-        fetchPreviousLeaderboard(currentPlatform);
-      });
-
-      // Inicjalizacja - Rain.gg jako aktywny i załaduj current leaderboard
-      document.querySelector('[data-platform="rain"]').parentElement.classList.add('active');
-      fetchLeaderboard('rain');
-    });
-  </script>
-</body>
-</html>
           currentPlatform = this.dataset.platform;
           
           // Pobranie nowego leaderboardu
