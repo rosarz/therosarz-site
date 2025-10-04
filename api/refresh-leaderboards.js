@@ -1,4 +1,4 @@
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   const SECRET_KEY = process.env.REFRESH_SECRET || 'change-this-secret';
   
   // Simple auth - tylko z tym kluczem można odświeżyć
@@ -38,15 +38,4 @@ export default async function handler(req, res) {
     timestamp: new Date().toISOString(),
     results
   });
-}
-    results.csgobig = 'OK';
-  } catch (e) {
-    results.csgobig = `ERROR: ${e.message}`;
-  }
-  
-  res.status(200).json({
-    message: 'Leaderboards refreshed',
-    timestamp: new Date().toISOString(),
-    results
-  });
-}
+};

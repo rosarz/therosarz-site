@@ -12,7 +12,7 @@ function isCacheValid(cacheEntry) {
   return (Date.now() - cacheEntry.timestamp) < CACHE_TTL;
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   const { start_date, end_date, type, code, site = 'rain' } = req.query;
   
   try {
@@ -94,4 +94,4 @@ export default async function handler(req, res) {
     
     res.status(500).json({ error: "Failed", details: e.toString() });
   }
-}
+};
