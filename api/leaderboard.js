@@ -101,13 +101,26 @@ export default async function handler(req, res) {
       }
     }
     
-    // CSGOBig handling
+    // CSGOBig handling with memory cache
     if (site === 'csgobig') {
+      const cacheEntry = platformCache.csgobig;
+      
+      // Return cached data if valid
+      if (isCacheValid(cacheEntry) && cacheEntry.cacheKey === cacheKey) {
+        console.log(`✅ Serving ${site} data from cache (age: ${Math.floor((Date.now() - cacheEntry.timestamp) / 1000)}s)`);
+        return res.status(200).json(cacheEntry.data);
+      }
+      
+      console.log(`🔄 Fetching fresh ${site} data...`);
+      
       try {
+        // Convert ISO dates to epoch MILLISECONDS (CSGOBig format)
         const fromEpoch = new Date(start_date).getTime();
         const toEpoch = new Date(end_date).getTime();
         
         const url = `https://csgobig.com/api/partners/getRefDetails/${code}?from=${fromEpoch}&to=${toEpoch}`;
+        console.log('CSGOBig API URL:', url);
+        console.log('CSGOBig epoch times (milliseconds) - from:', fromEpoch, 'to:', toEpoch);
         
         const response = await fetch(url, {
           headers: {
@@ -121,6 +134,7 @@ export default async function handler(req, res) {
         }
         
         const csgobigData = await response.json();
+        console.log('CSGOBig API success, results count:', csgobigData.results?.length || 0);
         
         const results = (csgobigData.results || []).map(user => {
           const username = user.name || '';
