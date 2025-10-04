@@ -31,29 +31,38 @@ module.exports = async function handler(req, res) {
       try {
         const response = await fetch('https://clash.gg/api/affiliates/leaderboards/my-leaderboards-api', {
           headers: {
-            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoicGFzcyIsInNjb3BlIjoiYWZmaWxpYXRlcyIsInVzZXJJZCI6NTE1ODQzLCJpYXQiOjE3NTUwODU5NjUsImV4cCI6MTkxMjg3Mzk2NX0.oUwuZuACZfow58Pfr__MDfCJTqT1zLsROpyklFdZDIc',
-            'Accept': 'application/json'
+            'Authorization': 'Bearer TWOJ_NOWY_TOKEN_TUTAJ',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Origin': 'https://clash.gg',
+            'Referer': 'https://clash.gg/'
           }
         });
         
+        // Log response details
+        console.log('Clash.gg response status:', response.status);
+        console.log('Clash.gg response headers:', [...response.headers.entries()]);
+        
         if (!response.ok) {
-          console.error('Clash.gg API HTTP error:', response.status, response.statusText);
+          const errorText = await response.text();
+          console.error('Clash.gg API error body:', errorText);
           
           // If we have old cache, use it as fallback
           if (cacheEntry && cacheEntry.data) {
-            console.log('⚠️ Using old Clash.gg cache due to 403 error');
+            console.log('⚠️ Using old Clash.gg cache due to API error');
             return res.status(200).json({
               ...cacheEntry.data,
               _fallback: true,
-              _message: 'Using cached data due to API token expiration'
+              _message: `Using cached data - API returned ${response.status}`
             });
           }
           
-          throw new Error(`Clash.gg API returned ${response.status}`);
+          throw new Error(`Clash.gg API returned ${response.status}: ${errorText}`);
         }
         
         const clashData = await response.json();
-        console.log('Clash.gg API response keys:', Object.keys(clashData));
+        console.log('Clash.gg raw response:', JSON.stringify(clashData).substring(0, 500));
         
         // Handle different response structures safely
         let leaderboards = [];
