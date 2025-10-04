@@ -28,28 +28,57 @@ module.exports = async function handler(req, res) {
     
     // Clash.gg
     if (site === 'clash') {
-      const response = await fetch('https://clash.gg/api/affiliates/leaderboards/my-leaderboards-api', {
-        headers: {
-          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoicGFzcyIsInNjb3BlIjoiYWZmaWxpYXRlcyIsInVzZXJJZCI6NTE1ODQzLCJpYXQiOjE3NTUwODU5NjUsImV4cCI6MTkxMjg3Mzk2NX0.oUwuZuACZfow58Pfr__MDfCJTqT1zLsROpyklFdZDIc',
-          'Accept': 'application/json'
+      try {
+        const response = await fetch('https://clash.gg/api/affiliates/leaderboards/my-leaderboards-api', {
+          headers: {
+            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoicGFzcyIsInNjb3BlIjoiYWZmaWxpYXRlcyIsInVzZXJJZCI6NTE1ODQzLCJpYXQiOjE3NTUwODU5NjUsImV4cCI6MTkxMjg3Mzk2NX0.oUwuZuACZfow58Pfr__MDfCJTqT1zLsROpyklFdZDIc',
+            'Accept': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Clash.gg API returned ${response.status}`);
         }
-      });
-      
-      const clashData = await response.json();
-      let leaderboards = Array.isArray(clashData.data) ? clashData.data : (Array.isArray(clashData) ? clashData : [clashData]);
-      let targetLeaderboard = leaderboards.find(lb => lb.id === 841) || leaderboards[0];
-      const topPlayers = targetLeaderboard?.topPlayers || [];
-      
-      const results = topPlayers.map(user => ({
-        username: (user.username || user.name || '').slice(0, 2) + '*'.repeat(6),
-        wagered: parseFloat(user.wagered || 0) / 100,
-        avatar: user.avatar || user.avatarUrl || '../bot.png'
-      })).sort((a, b) => b.wagered - a.wagered);
-      
-      const responseData = { results, prize_pool: "500$" };
-      platformCache[site] = { data: responseData, timestamp: Date.now() };
-      console.log(`✅ ${site} cached (${results.length} users)`);
-      return res.status(200).json(responseData);
+        
+        const clashData = await response.json();
+        console.log('Clash.gg raw response:', clashData);
+        
+        // Handle different response structures
+        let leaderboards;
+        if (clashData.data && Array.isArray(clashData.data)) {
+          leaderboards = clashData.data;
+        } else if (Array.isArray(clashData)) {
+          leaderboards = clashData;
+        } else {
+          leaderboards = [clashData];
+        }
+        
+        console.log('Clash.gg leaderboards found:', leaderboards.length);
+        
+        let targetLeaderboard = leaderboards.find(lb => lb && (lb.id === 841 || lb.id === '841'));
+        if (!targetLeaderboard) {
+          targetLeaderboard = leaderboards[0];
+        }
+        
+        console.log('Clash.gg target leaderboard:', targetLeaderboard);
+        
+        const topPlayers = targetLeaderboard?.topPlayers || [];
+        console.log('Clash.gg topPlayers count:', topPlayers.length);
+        
+        const results = topPlayers.map(user => ({
+          username: (user.username || user.name || '').slice(0, 2) + '*'.repeat(6),
+          wagered: parseFloat(user.wagered || 0) / 100,
+          avatar: user.avatar || user.avatarUrl || '../bot.png'
+        })).sort((a, b) => b.wagered - a.wagered);
+        
+        const responseData = { results, prize_pool: "500$" };
+        platformCache[site] = { data: responseData, timestamp: Date.now() };
+        console.log(`✅ ${site} cached (${results.length} users)`);
+        return res.status(200).json(responseData);
+      } catch (error) {
+        console.error('Clash.gg detailed error:', error);
+        throw error;
+      }
     }
     
     // CSGOBig
