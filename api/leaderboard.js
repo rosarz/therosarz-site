@@ -110,13 +110,13 @@ export default async function handler(req, res) {
       
       // Try to fetch fresh data
       try {
-        // Convert ISO dates to epoch milliseconds (CSGOBig format)
-        const fromEpoch = new Date(start_date).getTime();
-        const toEpoch = new Date(end_date).getTime();
+        // Convert ISO dates to epoch SECONDS (not milliseconds) for CSGOBig
+        const fromEpoch = Math.floor(new Date(start_date).getTime() / 1000);
+        const toEpoch = Math.floor(new Date(end_date).getTime() / 1000);
         
         const url = `https://csgobig.com/api/partners/getRefDetails/${code}?from=${fromEpoch}&to=${toEpoch}`;
         console.log('Fetching fresh CSGOBig data from:', url);
-        console.log('CSGOBig epoch times - from:', fromEpoch, 'to:', toEpoch);
+        console.log('CSGOBig epoch times (seconds) - from:', fromEpoch, 'to:', toEpoch);
         
         const response = await fetch(url, {
           headers: {
