@@ -1033,117 +1033,28 @@
       try {
         let data;
         
-        if (config.apiType === 'csgobig') {
-          // CSGOBig - pobierz dane z publicznego pliku JSON
-          try {
-            console.log('=== CSGOBIG DATA START ===');
-            console.log('Fetching CSGOBig data from public file');
-            
-            // Najpierw spróbuj pobrać z pliku
-            const fileResponse = await fetch('/data/csgobig-leaderboard.json?t=' + Date.now());
-            
-            if (fileResponse.ok) {
-              data = await fileResponse.json();
-              console.log('✅ CSGOBig data loaded from file:', data);
-              console.log('Last update:', data._lastUpdate);
-            } else {
-              // Jeśli plik nie istnieje, wywołaj API proxy aby go utworzyć
-              console.log('⚠️ File not found, calling API to create it...');
-              const apiUrl = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&type=wagered&code=${config.code}&site=csgobig`;
-              const apiResponse = await fetch(apiUrl);
-              
-              if (apiResponse.ok) {
-                data = await apiResponse.json();
-                console.log('✅ CSGOBig data created via API');
-              } else {
-                throw new Error(`CSGOBig API failed with status: ${apiResponse.status}`);
-              }
-            }
-            console.log('=== CSGOBIG DATA END ===');
-          } catch (e) {
-            console.error(`Failed to fetch CSGOBig data:`, e);
-            throw new Error(`CSGOBig error: ${e.message}`);
-          }
-        } else if (config.apiType === 'clash') {
-          // Clash.gg API call - use authorized endpoints
-          try {
-            console.log('=== CLASH.GG API DEBUG START ===');
-            console.log('Current date:', new Date().toISOString());
-            console.log('Config dates:', config.startDate, 'to', config.endDate);
-            console.log('Trying Clash.gg my-leaderboards-api with authorization');
-            
-            const response = await fetch('https://clash.gg/api/affiliates/leaderboards/my-leaderboards-api', {
-              headers: {
-                'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoicGFzcyIsInNjb3BlIjoiYWZmaWxpYXRlcyIsInVzZXJJZCI6NTE1ODQzLCJpYXQiOjE3NTUwODU5NjUsImV4cCI6MTkxMjg3Mzk2NX0.oUwuZuACZfow58Pfr__MDfCJTqT1zLsROpyklFdZDIc',
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-              }
-            });
-            
-            console.log('My-leaderboards API response status:', response.status);
-            console.log('Response headers:', [...response.headers.entries()]);
-            
-            if (response.ok) {
-              const responseText = await response.text();
-              console.log('Raw response text:', responseText);
-              try {
-                data = JSON.parse(responseText);
-                console.log(`${config.name} my-leaderboards-api JSON:`, data);
-              } catch (parseError) {
-                console.error('JSON parse error:', parseError);
-                throw new Error('Invalid JSON response from my-leaderboards API');
-              }
-            } else {
-              const errorText = await response.text();
-              console.log(`my-leaderboards-api failed with status ${response.status}:`, errorText);
-              
-              // Fallback to detailed-summary API with current date
-              const currentDate = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
-              console.log(`Fallback: trying detailed-summary API with date: ${currentDate}`);
-              
-              const summaryResponse = await fetch(`https://api.clash.gg/affiliates/detailed-summary/v2/${currentDate}`, {
-                headers: {
-                  'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoicGFzcyIsInNjb3BlIjoiYWZmaWxpYXRlcyIsInVzZXJJZCI6NTE1ODQzLCJpYXQiOjE3NTUwODU5NjUsImV4cCI6MTkxMjg3Mzk2NX0.oUwuZuACZfow58Pfr__MDfCJTqT1zLsROpyklFdZDIc',
-                  'Accept': 'application/json',
-                  'Content-Type': 'application/json'
-                }
-              });
-              
-              console.log('Detailed-summary API response status:', summaryResponse.status);
-              
-              if (summaryResponse.ok) {
-                const summaryText = await summaryResponse.text();
-                console.log('Raw summary response text:', summaryText);
-                try {
-                  data = JSON.parse(summaryText);
-                  console.log(`${config.name} detailed-summary API JSON:`, data);
-                } catch (parseError) {
-                  console.error('Summary JSON parse error:', parseError);
-                  throw new Error('Invalid JSON response from detailed-summary API');
-                }
-              } else {
-                const summaryErrorText = await summaryResponse.text();
-                console.log(`detailed-summary API failed with status ${summaryResponse.status}:`, summaryErrorText);
-                throw new Error(`Both APIs failed. My-leaderboards: ${response.status}, Detailed-summary: ${summaryResponse.status}`);
-              }
-            }
-            console.log('=== CLASH.GG API DEBUG END ===');
-          } catch (e) {
-            console.error(`Failed to fetch from authorized Clash.gg APIs:`, e);
-            throw new Error(`Clash.gg API error: ${e.message}`);
-          }
-          
-          // Transform Clash.gg data to match our format
-          const transformedResults = transformClashData(data);
-          data = { results: transformedResults };
+        // WSZYSTKIE platformy - pobieraj TYLKO z backend proxy (cache 20 min)
+        const TYPE = "wagered";
+        let url;
+        
+        if (config.apiType === 'clash') {
+          url = `/api/leaderboard?site=clash`;
+        } else if (config.apiType === 'csgobig') {
+          url = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&type=${TYPE}&code=${config.code}&site=csgobig`;
         } else {
-          // Rain.gg API call
-          const TYPE = "wagered";
-          const url = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&type=${TYPE}&code=${config.code}&site=${siteName}`;
-          const response = await fetch(url);
-          data = await response.json();
-          console.log(`${config.name} API response:`, data);
+          // Rain.gg
+          url = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&type=${TYPE}&code=${config.code}&site=rain`;
         }
+        
+        console.log(`📡 Fetching ${config.name} from backend proxy:`, url);
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+          throw new Error(`Backend returned ${response.status}`);
+        }
+        
+        data = await response.json();
+        console.log(`✅ ${config.name} data from cache:`, data);
         
         // Update title with prize pool if available
         const prizePool = data.prize_pool || data.prizePool || config.defaultPrize;
