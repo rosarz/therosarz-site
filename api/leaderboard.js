@@ -9,7 +9,6 @@ global.leaderboardCache = global.leaderboardCache || {
 
 const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 
-// Endpoint tylko do odczytu dla użytkowników - serwuje statyczne pliki JSON
 export default async function handler(req, res) {
   const { site = 'rain' } = req.query;
   
@@ -41,7 +40,8 @@ export default async function handler(req, res) {
     // No data at all
     return res.status(503).json({
       error: 'Service initializing',
-      message: `No ${site} data available yet. Please wait for next refresh.`
+      message: `No ${site} data available yet. Please wait for next refresh or trigger manual refresh.`,
+      hint: `Call /api/refresh-leaderboard with Authorization header to populate cache`
     });
     
   } catch (e) {
