@@ -110,11 +110,13 @@ export default async function handler(req, res) {
       
       // Try to fetch fresh data
       try {
+        // Convert ISO dates to epoch milliseconds (CSGOBig format)
         const fromEpoch = new Date(start_date).getTime();
         const toEpoch = new Date(end_date).getTime();
         
         const url = `https://csgobig.com/api/partners/getRefDetails/${code}?from=${fromEpoch}&to=${toEpoch}`;
         console.log('Fetching fresh CSGOBig data from:', url);
+        console.log('CSGOBig epoch times - from:', fromEpoch, 'to:', toEpoch);
         
         const response = await fetch(url, {
           headers: {
@@ -124,10 +126,13 @@ export default async function handler(req, res) {
         });
         
         if (!response.ok) {
-          throw new Error(`CSGOBig API returned ${response.status}`);
+          const errorText = await response.text();
+          console.error('CSGOBig API error response:', errorText);
+          throw new Error(`CSGOBig API returned ${response.status}: ${errorText}`);
         }
         
         const csgobigData = await response.json();
+        console.log('CSGOBig API success, results count:', csgobigData.results?.length || 0);
         
         // Transform data
         const results = (csgobigData.results || []).map(user => {
@@ -147,7 +152,7 @@ export default async function handler(req, res) {
         
         const responseData = {
           results: results,
-          prize_pool: "500$"
+          prize_pool: "750$"
         };
         
         // Save to memory cache
