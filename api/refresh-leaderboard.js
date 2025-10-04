@@ -61,29 +61,9 @@ async function fetchClashData() {
   if (!response.ok) throw new Error(`Clash API: ${response.status}`);
   const clashData = await response.json();
   
-  console.log('Clash.gg raw response:', JSON.stringify(clashData, null, 2));
-  
   let leaderboards = Array.isArray(clashData) ? clashData : [clashData];
-  
-  // Jeśli brak leaderboards, zwróć puste wyniki
-  if (!leaderboards || leaderboards.length === 0) {
-    console.log('⚠️ No Clash.gg leaderboards found');
-    return { results: [], prize_pool: "500$" };
-  }
-  
-  // Znajdź leaderboard - najpierw ID 841, potem najnowszy
-  let targetLeaderboard = leaderboards.find(lb => lb.id === 841 || lb.id === '841');
-  
-  if (!targetLeaderboard) {
-    console.log('⚠️ Leaderboard ID 841 not found, using most recent');
-    targetLeaderboard = leaderboards.sort((a, b) => new Date(b.startDate || 0) - new Date(a.startDate || 0))[0];
-  }
-  
-  console.log('Selected Clash.gg leaderboard:', targetLeaderboard?.id, targetLeaderboard?.name);
-  
+  let targetLeaderboard = leaderboards.find(lb => lb.id === 841) || leaderboards[0];
   const topPlayers = targetLeaderboard?.topPlayers || [];
-  
-  console.log(`Found ${topPlayers.length} players in Clash.gg leaderboard`);
   
   const results = topPlayers.map(user => ({
     username: (() => {
@@ -101,31 +81,17 @@ async function fetchClashData() {
 
 async function fetchCSGOBigData() {
   const code = "ROSARZ8374JSDBJK384784983HDJSADBJHER";
-  const fromEpoch = new Date("2025-10-03T00:00:00.00Z").getTime();
-  const toEpoch = new Date("2025-10-17T23:59:59.99Z").getTime();
+  // Daty w formacie epoch milliseconds
+  const fromEpoch = 1728000000000; // 2025-10-03T00:00:00.000Z
+  const toEpoch = 1729209599999;   // 2025-10-17T23:59:59.999Z
   
-  // CSGOBig może wymagać cookies lub innego uwierzytelnienia
-  // Spróbuj bez dodatkowych headerów
-  const url = `https://csgobig.com/api/partners/getRefDetails/${code}?from=${fromEpoch}&to=${toEpoch}`;
+  const response = await fetch(
+    `https://csgobig.com/api/partners/getRefDetails/${code}?from=${fromEpoch}&to=${toEpoch}`,
+    { headers: { 'Accept': 'application/json' } }
+  );
   
-  console.log('Fetching CSGOBig from:', url);
-  
-  const response = await fetch(url, {
-    headers: {
-      'Accept': 'application/json',
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-    }
-  });
-  
-  console.log('CSGOBig response status:', response.status);
-  const responseText = await response.text();
-  console.log('CSGOBig raw response:', responseText.substring(0, 500));
-  
-  if (!response.ok) {
-    throw new Error(`CSGOBig API: ${response.status} - ${responseText.substring(0, 200)}`);
-  }
-  
-  const csgobigData = JSON.parse(responseText);
+  if (!response.ok) throw new Error(`CSGOBig API: ${response.status}`);
+  const csgobigData = await response.json();
   
   const results = (csgobigData.results || []).map(user => ({
     username: (() => {
@@ -137,8 +103,6 @@ async function fetchCSGOBigData() {
     wagered: parseFloat(user.wagerTotal || 0),
     avatar: user.img?.startsWith('http') ? user.img : `https://csgobig.com${user.img || '/assets/img/censored_avatar.png'}`
   })).sort((a, b) => b.wagered - a.wagered);
-  
-  console.log(`Found ${results.length} users in CSGOBig data`);
   
   return { results, prize_pool: "750$" };
 }
