@@ -29,85 +29,52 @@ module.exports = async function handler(req, res) {
     // Clash.gg
     if (site === 'clash') {
       try {
-        const response = await fetch('https://clash.gg/api/affiliates/leaderboards/my-leaderboards-api', {
+        // Use detailed-summary API endpoint (from documentation)
+        // Get data from start of leaderboard period
+        const startDate = '2025-09-22'; // Start date of current leaderboard
+        
+        const response = await fetch(`https://api.clash.gg/affiliates/detailed-summary/v2/${startDate}`, {
           headers: {
-            'Authorization': 'Bearer TWOJ_NOWY_TOKEN_TUTAJ',
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Origin': 'https://clash.gg',
-            'Referer': 'https://clash.gg/'
+            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoicGFzcyIsInNjb3BlIjoiYWZmaWxpYXRlcyIsInVzZXJJZCI6NTE1ODQzLCJpYXQiOjE3NTUwODU5NjUsImV4cCI6MTkxMjg3Mzk2NX0.oUwuZuACZfow58Pfr__MDfCJTqT1zLsROpyklFdZDIc',
+            'Accept': 'application/json'
           }
         });
         
-        // Log response details
-        console.log('Clash.gg response status:', response.status);
-        console.log('Clash.gg response headers:', [...response.headers.entries()]);
+        console.log('Clash.gg API response status:', response.status);
         
         if (!response.ok) {
           const errorText = await response.text();
-          console.error('Clash.gg API error body:', errorText);
+          console.error('Clash.gg API error:', errorText);
           
-          // If we have old cache, use it as fallback
+          // Fallback to old cache
           if (cacheEntry && cacheEntry.data) {
-            console.log('⚠️ Using old Clash.gg cache due to API error');
+            console.log('⚠️ Using old Clash.gg cache');
             return res.status(200).json({
               ...cacheEntry.data,
               _fallback: true,
-              _message: `Using cached data - API returned ${response.status}`
+              _message: `API returned ${response.status}`
             });
           }
           
-          throw new Error(`Clash.gg API returned ${response.status}: ${errorText}`);
+          throw new Error(`Clash.gg API returned ${response.status}`);
         }
         
         const clashData = await response.json();
-        console.log('Clash.gg raw response:', JSON.stringify(clashData).substring(0, 500));
+        console.log('Clash.gg API response keys:', Object.keys(clashData));
         
-        // Handle different response structures safely
-        let leaderboards = [];
+        // The API returns summary data, we need to extract user data
+        // Based on the API, it should return referral data with deposits/wagers
+        const users = clashData.referrals || clashData.users || clashData.data || [];
+        console.log('Clash.gg users found:', users.length);
         
-        if (clashData && clashData.data && Array.isArray(clashData.data)) {
-          leaderboards = clashData.data;
-          console.log('✅ Found clashData.data array');
-        } else if (Array.isArray(clashData)) {
-          leaderboards = clashData;
-          console.log('✅ clashData is array');
-        } else if (clashData && typeof clashData === 'object') {
-          leaderboards = [clashData];
-          console.log('⚠️ Wrapped clashData in array');
-        } else {
-          console.error('❌ Unexpected Clash.gg response structure:', clashData);
-          throw new Error('Invalid Clash.gg API response structure');
-        }
-        
-        console.log('Clash.gg leaderboards count:', leaderboards.length);
-        
-        if (leaderboards.length === 0) {
-          throw new Error('No leaderboards found in Clash.gg response');
-        }
-        
-        let targetLeaderboard = leaderboards.find(lb => lb && (lb.id === 841 || lb.id === '841'));
-        
-        if (!targetLeaderboard) {
-          console.log('⚠️ Leaderboard 841 not found, using first:', leaderboards[0]?.id);
-          targetLeaderboard = leaderboards[0];
-        }
-        
-        if (!targetLeaderboard) {
-          throw new Error('No target leaderboard found');
-        }
-        
-        console.log('Clash.gg target leaderboard ID:', targetLeaderboard.id);
-        
-        const topPlayers = targetLeaderboard.topPlayers || [];
-        console.log('Clash.gg topPlayers count:', topPlayers.length);
-        
-        const results = topPlayers.map(user => ({
+        const results = users.map(user => ({
           username: (user.username || user.name || '').slice(0, 2) + '*'.repeat(6),
-          wagered: parseFloat(user.wagered || 0) / 100,
+          wagered: parseFloat(user.wagered || user.wager || 0) / 100, // Convert from gem cents
           avatar: user.avatar || user.avatarUrl || '../bot.png'
-        })).sort((a, b) => b.wagered - a.wagered);
+        }))
+        .filter(user => user.wagered > 0) // Only users with wagers
+        .sort((a, b) => b.wagered - a.wagered)
+        .slice(0, 50); // Top 50 users
         
         const responseData = { results, prize_pool: "500$" };
         platformCache[site] = { data: responseData, timestamp: Date.now() };
@@ -115,15 +82,15 @@ module.exports = async function handler(req, res) {
         return res.status(200).json(responseData);
         
       } catch (error) {
-        console.error('❌ Clash.gg error details:', error.message);
+        console.error('❌ Clash.gg error:', error.message);
         
-        // Fallback to old cache if available
+        // Fallback to old cache
         if (cacheEntry && cacheEntry.data) {
           console.log(`⚠️ Using old Clash.gg cache as fallback`);
           return res.status(200).json({
             ...cacheEntry.data,
             _fallback: true,
-            _message: 'Using cached data due to API error'
+            _message: 'Using cached data'
           });
         }
         
