@@ -1034,36 +1034,36 @@
         let data;
         
         if (config.apiType === 'csgobig') {
-          // CSGOBig API call - użyj proxy podobnie jak Rain.gg
+          // CSGOBig - pobierz dane z publicznego pliku JSON
           try {
-            console.log('=== CSGOBIG API DEBUG START ===');
-            console.log('Current date:', new Date().toISOString());
-            console.log('Config dates:', config.startDate, 'to', config.endDate);
+            console.log('=== CSGOBIG DATA START ===');
+            console.log('Fetching CSGOBig data from public file');
             
-            // Użyj Twojego API proxy zamiast bezpośredniego wywołania
-            const url = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&type=wagered&code=${config.code}&site=csgobig`;
-            console.log('CSGOBig API URL (via proxy):', url);
+            // Najpierw spróbuj pobrać z pliku
+            const fileResponse = await fetch('/data/csgobig-leaderboard.json?t=' + Date.now());
             
-            const response = await fetch(url);
-            
-            console.log('CSGOBig API response status:', response.status);
-            
-            if (response.ok) {
-              data = await response.json();
-              console.log(`${config.name} API JSON:`, data);
+            if (fileResponse.ok) {
+              data = await fileResponse.json();
+              console.log('✅ CSGOBig data loaded from file:', data);
+              console.log('Last update:', data._lastUpdate);
             } else {
-              const errorText = await response.text();
-              console.log(`CSGOBig API failed with status ${response.status}:`, errorText);
-              throw new Error(`CSGOBig API failed with status: ${response.status}`);
+              // Jeśli plik nie istnieje, wywołaj API proxy aby go utworzyć
+              console.log('⚠️ File not found, calling API to create it...');
+              const apiUrl = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&type=wagered&code=${config.code}&site=csgobig`;
+              const apiResponse = await fetch(apiUrl);
+              
+              if (apiResponse.ok) {
+                data = await apiResponse.json();
+                console.log('✅ CSGOBig data created via API');
+              } else {
+                throw new Error(`CSGOBig API failed with status: ${apiResponse.status}`);
+              }
             }
-            console.log('=== CSGOBIG API DEBUG END ===');
+            console.log('=== CSGOBIG DATA END ===');
           } catch (e) {
-            console.error(`Failed to fetch from CSGOBig API:`, e);
-            throw new Error(`CSGOBig API error: ${e.message}`);
+            console.error(`Failed to fetch CSGOBig data:`, e);
+            throw new Error(`CSGOBig error: ${e.message}`);
           }
-          
-          // Dane już są w odpowiednim formacie z API proxy
-          // Nie trzeba transformować
         } else if (config.apiType === 'clash') {
           // Clash.gg API call - use authorized endpoints
           try {

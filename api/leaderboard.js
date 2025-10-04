@@ -1,4 +1,5 @@
 import path from 'path';
+import fs from 'fs';
 
 // In-memory cache for all platforms
 const platformCache = {
@@ -8,6 +9,28 @@ const platformCache = {
 };
 
 const CACHE_TTL = 15 * 60 * 1000; // 15 minutes in milliseconds
+
+// Path to public data directory
+const PUBLIC_DATA_DIR = path.join(process.cwd(), 'public', 'data');
+const CSGOBIG_DATA_FILE = path.join(PUBLIC_DATA_DIR, 'csgobig-leaderboard.json');
+
+// Ensure public data directory exists
+if (!fs.existsSync(PUBLIC_DATA_DIR)) {
+  fs.mkdirSync(PUBLIC_DATA_DIR, { recursive: true });
+}
+
+// Helper to write data to public file
+function saveToPublicFile(data) {
+  try {
+    fs.writeFileSync(CSGOBIG_DATA_FILE, JSON.stringify({
+      ...data,
+      _lastUpdate: new Date().toISOString()
+    }, null, 2));
+    console.log('✅ CSGOBig data saved to public file');
+  } catch (error) {
+    console.error('❌ Failed to save CSGOBig data to file:', error);
+  }
+}
 
 // Check if cache is valid
 function isCacheValid(cacheEntry) {
@@ -22,7 +45,94 @@ export default async function handler(req, res) {
     const cacheEntry = platformCache[site];
     const cacheKey = `${site}_${start_date}_${end_date}_${code}`;
     
-    // Return cached data if valid
+    // CSGOBig handling with file save
+    if (site === 'csgobig') {
+      // Return cached data if valid
+      if (isCacheValid(cacheEntry) && cacheEntry.cacheKey === cacheKey) {
+        console.log(`✅ Serving ${site} data from cache (age: ${Math.floor((Date.now() - cacheEntry.timestamp) / 1000)}s)`);
+        return res.status(200).json(cacheEntry.data);
+      }
+      
+      console.log(`🔄 Fetching fresh ${site} data...`);
+      
+      try {
+        // Convert ISO dates to epoch MILLISECONDS (CSGOBig format)
+        const fromEpoch = new Date(start_date).getTime();
+        const toEpoch = new Date(end_date).getTime();
+        
+        const url = `https://csgobig.com/api/partners/getRefDetails/${code}?from=${fromEpoch}&to=${toEpoch}`;
+        console.log('CSGOBig API URL:', url);
+        console.log('CSGOBig epoch times (milliseconds) - from:', fromEpoch, 'to:', toEpoch);
+        
+        const response = await fetch(url, {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`CSGOBig API returned ${response.status}`);
+        }
+        
+        const csgobigData = await response.json();
+        console.log('CSGOBig API success, results count:', csgobigData.results?.length || 0);
+        
+        // Transform data
+        const results = (csgobigData.results || []).map(user => {
+          const username = user.name || '';
+          const visiblePart = username.slice(0, 2);
+          const stars = '*'.repeat(Math.max(0, Math.min(6, username.length - 2)));
+          const anonymized = (visiblePart + stars).slice(0, 8);
+          
+          return {
+            username: anonymized,
+            wagered: parseFloat(user.wagerTotal || 0),
+            avatar: user.img?.startsWith('http') ? user.img : `https://csgobig.com${user.img || '/assets/img/censored_avatar.png'}`
+          };
+        });
+        
+        results.sort((a, b) => b.wagered - a.wagered);
+        
+        const responseData = {
+          results: results,
+          prize_pool: "750$"
+        };
+        
+        // Update cache
+        platformCache[site] = {
+          data: responseData,
+          timestamp: Date.now(),
+          cacheKey: cacheKey,
+          lastSuccessfulData: responseData
+        };
+        
+        // Save to public file for frontend access
+        saveToPublicFile(responseData);
+        
+        console.log(`✅ CSGOBig data cached (${results.length} users)`);
+        return res.status(200).json(responseData);
+        
+      } catch (fetchError) {
+        console.error('CSGOBig API error:', fetchError.message);
+        
+        if (cacheEntry && cacheEntry.lastSuccessfulData) {
+          console.log('⚠️ Using CSGOBig fallback data');
+          platformCache[site].timestamp = Date.now();
+          platformCache[site].cacheKey = cacheKey;
+          
+          return res.status(200).json({
+            ...cacheEntry.lastSuccessfulData,
+            _fallback: true,
+            _message: 'Using cached data due to API unavailability'
+          });
+        }
+        
+        throw new Error(`CSGOBig API error: ${fetchError.message}`);
+      }
+    }
+    
+    // Return cached data if valid (for other sites)
     if (isCacheValid(cacheEntry) && cacheEntry.cacheKey === cacheKey) {
       console.log(`✅ Serving ${site} data from cache (age: ${Math.floor((Date.now() - cacheEntry.timestamp) / 1000)}s)`);
       return res.status(200).json(cacheEntry.data);
@@ -98,91 +208,6 @@ export default async function handler(req, res) {
         }
         
         throw new Error(`Clash.gg API error: ${fetchError.message}`);
-      }
-    }
-    
-    // CSGOBig handling with memory cache
-    if (site === 'csgobig') {
-      const cacheEntry = platformCache.csgobig;
-      
-      // Return cached data if valid
-      if (isCacheValid(cacheEntry) && cacheEntry.cacheKey === cacheKey) {
-        console.log(`✅ Serving ${site} data from cache (age: ${Math.floor((Date.now() - cacheEntry.timestamp) / 1000)}s)`);
-        return res.status(200).json(cacheEntry.data);
-      }
-      
-      console.log(`🔄 Fetching fresh ${site} data...`);
-      
-      try {
-        // Convert ISO dates to epoch MILLISECONDS (CSGOBig format)
-        const fromEpoch = new Date(start_date).getTime();
-        const toEpoch = new Date(end_date).getTime();
-        
-        const url = `https://csgobig.com/api/partners/getRefDetails/${code}?from=${fromEpoch}&to=${toEpoch}`;
-        console.log('CSGOBig API URL:', url);
-        console.log('CSGOBig epoch times (milliseconds) - from:', fromEpoch, 'to:', toEpoch);
-        
-        const response = await fetch(url, {
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (!response.ok) {
-          throw new Error(`CSGOBig API returned ${response.status}`);
-        }
-        
-        const csgobigData = await response.json();
-        console.log('CSGOBig API success, results count:', csgobigData.results?.length || 0);
-        
-        const results = (csgobigData.results || []).map(user => {
-          const username = user.name || '';
-          const visiblePart = username.slice(0, 2);
-          const stars = '*'.repeat(Math.max(0, Math.min(6, username.length - 2)));
-          const anonymized = (visiblePart + stars).slice(0, 8);
-          
-          return {
-            username: anonymized,
-            wagered: parseFloat(user.wagerTotal || 0),
-            avatar: user.img?.startsWith('http') ? user.img : `https://csgobig.com${user.img || '/assets/img/censored_avatar.png'}`
-          };
-        });
-        
-        results.sort((a, b) => b.wagered - a.wagered);
-        
-        const responseData = {
-          results: results,
-          prize_pool: "750$"
-        };
-        
-        // Update cache
-        platformCache[site] = {
-          data: responseData,
-          timestamp: Date.now(),
-          cacheKey: cacheKey,
-          lastSuccessfulData: responseData
-        };
-        
-        console.log(`✅ CSGOBig data cached (${results.length} users)`);
-        return res.status(200).json(responseData);
-        
-      } catch (fetchError) {
-        console.error('CSGOBig API error:', fetchError.message);
-        
-        if (cacheEntry && cacheEntry.lastSuccessfulData) {
-          console.log('⚠️ Using CSGOBig fallback data');
-          platformCache[site].timestamp = Date.now();
-          platformCache[site].cacheKey = cacheKey;
-          
-          return res.status(200).json({
-            ...cacheEntry.lastSuccessfulData,
-            _fallback: true,
-            _message: 'Using cached data due to API unavailability'
-          });
-        }
-        
-        throw new Error(`CSGOBig API error: ${fetchError.message}`);
       }
     }
     
