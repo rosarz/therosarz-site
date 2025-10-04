@@ -1,6 +1,3 @@
-import path from 'path';
-import fs from 'fs';
-
 // Simple in-memory cache
 const platformCache = {
   rain: { data: null, timestamp: null },
@@ -23,11 +20,11 @@ export default async function handler(req, res) {
     
     // Return cached data if valid
     if (isCacheValid(cacheEntry)) {
-      console.log(`✅ Cache hit for ${site}`);
+      console.log(`✅ Cache hit for ${site} (age: ${Math.floor((Date.now() - cacheEntry.timestamp) / 1000)}s)`);
       return res.status(200).json(cacheEntry.data);
     }
     
-    console.log(`🔄 Fetching ${site} data...`);
+    console.log(`🔄 Fetching fresh ${site} data...`);
     
     // Clash.gg
     if (site === 'clash') {
@@ -39,18 +36,19 @@ export default async function handler(req, res) {
       });
       
       const clashData = await response.json();
-      let leaderboards = Array.isArray(clashData) ? clashData : [clashData];
+      let leaderboards = Array.isArray(clashData.data) ? clashData.data : (Array.isArray(clashData) ? clashData : [clashData]);
       let targetLeaderboard = leaderboards.find(lb => lb.id === 841) || leaderboards[0];
       const topPlayers = targetLeaderboard?.topPlayers || [];
       
       const results = topPlayers.map(user => ({
-        username: (user.username || '').slice(0, 2) + '*'.repeat(6),
+        username: (user.username || user.name || '').slice(0, 2) + '*'.repeat(6),
         wagered: parseFloat(user.wagered || 0) / 100,
         avatar: user.avatar || user.avatarUrl || '../bot.png'
       })).sort((a, b) => b.wagered - a.wagered);
       
       const responseData = { results, prize_pool: "500$" };
       platformCache[site] = { data: responseData, timestamp: Date.now() };
+      console.log(`✅ ${site} cached (${results.length} users)`);
       return res.status(200).json(responseData);
     }
     
@@ -70,6 +68,7 @@ export default async function handler(req, res) {
       
       const responseData = { results, prize_pool: "750$" };
       platformCache[site] = { data: responseData, timestamp: Date.now() };
+      console.log(`✅ ${site} cached (${results.length} users)`);
       return res.status(200).json(responseData);
     }
     
@@ -81,14 +80,15 @@ export default async function handler(req, res) {
     const data = await response.json();
     
     platformCache[site] = { data, timestamp: Date.now() };
+    console.log(`✅ ${site} cached`);
     return res.status(200).json(data);
     
   } catch (e) {
-    console.error('Error:', e);
+    console.error(`❌ ${site} error:`, e.message);
     
     // Fallback to old cache if available
     if (cacheEntry && cacheEntry.data) {
-      console.log(`⚠️ Using old ${site} cache`);
+      console.log(`⚠️ Using old ${site} cache as fallback`);
       return res.status(200).json(cacheEntry.data);
     }
     
