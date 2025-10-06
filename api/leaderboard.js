@@ -13,6 +13,8 @@ const CSGOBIG_RATE_LIMIT = 15 * 60 * 1000; // 15 minut - limit API CSGOBig
 
 // Ścieżka do pliku z danymi CSGOBig
 const csgobigFilePath = path.join(process.cwd(), 'data', 'csgobig-data.json');
+// Ścieżka do pliku śledzącego ostatnie żądanie API CSGOBig
+const csgobigLastRequestPath = path.join(process.cwd(), 'data', 'csgobig-last-request.json');
 
 // Funkcja do zapisywania danych CSGOBig do pliku
 function saveCsgobigDataToFile(data) {
@@ -54,6 +56,40 @@ function loadCsgobigDataFromFile() {
   }
 }
 
+// Funkcja do zapisywania czasu ostatniego żądania API CSGOBig
+function saveLastRequestTime() {
+  try {
+    if (!fs.existsSync(path.join(process.cwd(), 'data'))) {
+      fs.mkdirSync(path.join(process.cwd(), 'data'), { recursive: true });
+    }
+    
+    fs.writeFileSync(csgobigLastRequestPath, JSON.stringify({ timestamp: Date.now() }, null, 2));
+    console.log('✅ CSGOBig last request time updated');
+  } catch (e) {
+    console.error('❌ Error saving CSGOBig last request time:', e.message);
+  }
+}
+
+// Funkcja do sprawdzania, czy możemy wywołać API CSGOBig (czy minęło 15 minut)
+function canMakeCSGOBigRequest() {
+  try {
+    if (fs.existsSync(csgobigLastRequestPath)) {
+      const lastRequest = JSON.parse(fs.readFileSync(csgobigLastRequestPath, 'utf8'));
+      const elapsed = Date.now() - lastRequest.timestamp;
+      
+      // Sprawdź czy minęło wystarczająco czasu od ostatniego żądania
+      if (elapsed < CSGOBIG_RATE_LIMIT) {
+        console.log(`⏳ CSGOBig rate limit: ${Math.floor((CSGOBIG_RATE_LIMIT - elapsed) / 1000)} seconds remaining`);
+        return false;
+      }
+    }
+    return true;
+  } catch (e) {
+    console.error('❌ Error checking CSGOBig rate limit:', e.message);
+    return true; // W przypadku błędu, pozwól na próbę wykonania żądania
+  }
+}
+
 function isCacheValid(cacheEntry) {
   if (!cacheEntry || !cacheEntry.timestamp) return false;
   return (Date.now() - cacheEntry.timestamp) < CACHE_TTL;
@@ -84,7 +120,7 @@ module.exports = async function handler(req, res) {
       
       const clashData = await response.json();
       let leaderboards = Array.isArray(clashData.data) ? clashData.data : (Array.isArray(clashData) ? clashData : [clashData]);
-      let targetLeaderboard = leaderboards.find(lb => lb.id === 841) || leaderboards[0];
+      let targetLeaderboard = leaderboards.find(lb => lb.id === 939) || leaderboards[0];
       const topPlayers = targetLeaderboard?.topPlayers || [];
       
       const results = topPlayers.map(user => ({
@@ -103,6 +139,23 @@ module.exports = async function handler(req, res) {
     if (site === 'csgobig') {
       const fromEpoch = new Date(start_date).getTime();
       const toEpoch = new Date(end_date).getTime();
+      
+      // Sprawdź, czy możemy wykonać żądanie do API CSGOBig
+      if (!canMakeCSGOBigRequest()) {
+        // Jeśli nie możemy wykonać żądania (rate limit), wczytaj dane z pliku
+        console.log('🕒 CSGOBig rate limit in effect. Loading data from file...');
+        const fileData = loadCsgobigDataFromFile();
+        
+        if (fileData) {
+          platformCache[site] = { data: fileData, timestamp: Date.now() };
+          return res.status(200).json(fileData);
+        } else {
+          throw new Error('Rate limited and no cached data available');
+        }
+      }
+      
+      // Jeśli możemy wykonać żądanie, zapisz czas żądania
+      saveLastRequestTime();
       
       try {
         const response = await fetch(`https://csgobig.com/api/partners/getRefDetails/${code}?from=${fromEpoch}&to=${toEpoch}`);
