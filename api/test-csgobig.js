@@ -3,6 +3,9 @@
 const fetch = require('node-fetch');
 
 module.exports = async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  
   try {
     console.log('=== TEST CSGOBIG API ===');
     
@@ -48,37 +51,34 @@ module.exports = async function handler(req, res) {
       console.error('Failed to parse response as JSON:', e);
     }
     
+    // Zwróć szczegółowe informacje diagnostyczne
     return res.status(200).json({
-      test_time: new Date().toISOString(),
-      request: {
-        url: apiUrl,
-        params: {
-          code,
-          startDate,
-          endDate,
-          fromEpoch,
-          toEpoch
-        }
+      timestamp: new Date().toISOString(),
+      test_parameters: {
+        code,
+        start_date: startDate,
+        end_date: endDate,
+        from_epoch: fromEpoch,
+        to_epoch: toEpoch,
+        api_url: apiUrl
       },
       response: {
         status,
-        headers,
+        content_type: headers['content-type'],
         success: data?.success || false,
         results_count: data?.results?.length || 0,
-        sample_results: data?.results?.slice(0, 3)
+        sample_users: data?.results?.slice(0, 3) || []
       },
-      raw_preview: responseText.substring(0, 200) + '...'
+      full_response: data || responseText.substring(0, 1000)
     });
-    
   } catch (e) {
-    console.error('Test failed:', e);
+    console.error('❌ Test failed:', e);
     return res.status(500).json({
       error: e.message,
-      stack: e.stack
+      stack: process.env.NODE_ENV === 'development' ? e.stack : undefined
     });
   }
 };
-      error: e.message,
       stack: e.stack
     });
   }
