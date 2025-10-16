@@ -222,18 +222,7 @@ module.exports = async function handler(req, res) {
         const fileData = loadCsgobigDataFromFile();
         
         if (fileData) {
-          // Dodaj metadane o źródle i czasie cache
-          fileData.source = 'file_cache';
-          fileData.cache_time = Date.now();
-          
-          // Zaktualizuj cache w pamięci
-          platformCache[site] = { 
-            data: fileData, 
-            timestamp: Date.now(),
-            status: 'from_file'
-          };
-          
-          setCacheHeaders(res, platformCache[site], site);
+          platformCache[site] = { data: fileData, timestamp: Date.now() };
           return res.status(200).json(fileData);
         } else {
           throw new Error('Rate limited and no cached data available');
