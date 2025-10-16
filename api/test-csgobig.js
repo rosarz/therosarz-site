@@ -59,27 +59,4 @@ module.exports = async function handler(req, res) {
     });
   }
 };
-        to_epoch: toEpoch,
-        api_url: apiUrl
-      },
-      response: {
-        status,
-        content_type: headers['content-type'],
-        success: data?.success || false,
-        results_count: data?.results?.length || 0,
-        sample_users: data?.results?.slice(0, 3) || []
-      },
-      full_response: data || responseText.substring(0, 1000)
-    });
-  } catch (e) {
-    console.error('❌ Test failed:', e);
-    return res.status(500).json({
-      error: e.message,
-      stack: process.env.NODE_ENV === 'development' ? e.stack : undefined
-    });
-  }
-};
-      stack: e.stack
-    });
-  }
-};
+
