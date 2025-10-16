@@ -1,18 +1,18 @@
 {
   "version": 2,
-  "functions": {
-    "api/**/*.js": {
-      "maxDuration": 30
+  "crons": {
+    "refresh_leaderboard": {
+      "schedule": "0 */6 * * *",
+      "path": "/api/refresh-leaderboard",
+      "enabled": false
     }
   },
-  "routes": [
-    {
-      "src": "/api/leaderboard",
-      "headers": {
-        "cache-control": "s-maxage=1200, stale-while-revalidate=3600"
-      }
+  "functions": {
+    "api/leaderboard.js": {
+      "maxDuration": 10
     }
-  ],
+  }
+}
   "crons": [
     {
       "path": "/api/refresh-cache?site=csgobig",

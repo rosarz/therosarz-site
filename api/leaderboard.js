@@ -7,23 +7,12 @@ const platformCache = {
 
 const fs = require('fs');
 const path = require('path');
+const { formatUsers, CSGOBIG_TIMESTAMPS } = require('./utils/helpers');
 
 // Stałe czasowe dla cache
 const CACHE_TTL = 20 * 60 * 1000; // 20 minut
 const CSGOBIG_RATE_LIMIT = 15 * 60 * 1000; // 15 minut - limit API CSGOBig
 const STALE_TTL = 60 * 60 * 1000; // 1 godzina - czas, przez który stare dane są akceptowalne
-
-// Stałe timestampy dla CSGOBIG (zamiast konwersji dat)
-const CSGOBIG_TIMESTAMPS = {
-  current: {
-    from: 1759453200000, // 2025-10-03T01:00:00.00Z w milisekundach
-    to: 1760662800000    // 2025-10-17T01:00:00.00Z w milisekundach
-  },
-  previous: {
-    from: 1758243600000, // 2025-09-19T00:00:00.00Z w milisekundach
-    to: 1759471200000    // 2025-10-03T02:00:00.00Z w milisekundach
-  }
-};
 
 // Ścieżki do plików cache
 const DATA_DIR = process.env.NODE_ENV === 'production' ? '/tmp' : path.join(process.cwd(), 'data');
@@ -161,68 +150,6 @@ function setCacheHeaders(res, cacheEntry, site) {
 }
 
 /**
- * Ujednolicony format danych dla wszystkich platform
- * @param {Array} rawUsers - Surowe dane użytkowników z API
- * @param {string} platform - Nazwa platformy ('rain', 'clash', 'csgobig')
- * @returns {Array} Sformatowana lista użytkowników
- */
-function formatUsers(rawUsers, platform) {
-  if (!Array.isArray(rawUsers) || rawUsers.length === 0) {
-    console.log(`❌ No users to format for ${platform}`);
-    return [];
-  }
-
-  console.log(`⚙️ Formatting ${rawUsers.length} users for ${platform}`);
-
-  return rawUsers.map((user, index) => {
-    try {
-      // Podstawowe dane
-      let username = '', wagered = 0, avatar = '../bot.png';
-      
-      // Mapowanie specyficzne dla platformy
-      if (platform === 'rain') {
-        username = user.username || `User${index}`;
-        wagered = parseFloat(user.wagered || 0);
-        avatar = user.avatar || '../bot.png';
-      } 
-      else if (platform === 'clash') {
-        username = user.username || user.name || `User${index}`;
-        wagered = parseFloat(user.wagered || 0) / 100; // Convert from gem cents to gems
-        avatar = user.avatar || user.avatarUrl || '../bot.png';
-      } 
-      else if (platform === 'csgobig') {
-        username = user.name || `User${index}`;
-        wagered = parseFloat(user.wagerTotal || 0);
-        avatar = user.img || '../bot.png';
-        
-        // Fix relative paths in CSGOBig avatars
-        if (avatar && !avatar.startsWith('http') && avatar.startsWith('/')) {
-          avatar = `https://csgobig.com${avatar}`;
-        }
-      }
-
-      // Anonimizacja nazw użytkowników
-      if (username && username.length > 2) {
-        username = username.slice(0, 2) + '*'.repeat(Math.min(6, username.length - 2));
-      }
-
-      return {
-        username,
-        wagered,
-        avatar
-      };
-    } catch (error) {
-      console.error(`❌ Error formatting user ${index}:`, error);
-      return {
-        username: `User${index}`,
-        wagered: 0,
-        avatar: '../bot.png'
-      };
-    }
-  }).filter(Boolean).sort((a, b) => b.wagered - a.wagered);
-}
-
-/**
  * Główny handler dla API leaderboard
  */
 module.exports = async function handler(req, res) {
@@ -232,18 +159,13 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   
+  // Handle OPTIONS request for CORS preflight
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
   try {
     const cacheEntry = platformCache[site];
-    
-    // Obsługa conditional requests i cache
-    const ifNoneMatch = req.headers['if-none-match'];
-    const etag = cacheEntry?.timestamp ? `"${site}-${cacheEntry.timestamp}"` : null;
-    
-    if (etag && ifNoneMatch === etag && isCacheValid(cacheEntry)) {
-      console.log(`✅ 304 Not Modified for ${site}`);
-      res.status(304).end();
-      return;
-    }
     
     // Return cached data if valid
     if (isCacheValid(cacheEntry)) {
@@ -348,7 +270,7 @@ module.exports = async function handler(req, res) {
         }
       }
       
-      // Jeśli możemy wykonać żądanie, zapisz czas żądania
+      // Zapisz czas żądania
       saveLastRequestTime();
       
       try {
@@ -361,7 +283,6 @@ module.exports = async function handler(req, res) {
         
         // Parsowanie odpowiedzi
         const responseText = await response.text();
-        console.log('CSGOBig API raw response preview:', responseText.substring(0, 100) + '...');
         
         let csgobigData;
         try {
