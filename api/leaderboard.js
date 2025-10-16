@@ -13,29 +13,17 @@ const CACHE_TTL = 20 * 60 * 1000; // 20 minut
 const CSGOBIG_RATE_LIMIT = 15 * 60 * 1000; // 15 minut - limit API CSGOBig
 const STALE_TTL = 60 * 60 * 1000; // 1 godzina - czas, przez który stare dane są akceptowalne
 
-// Stałe timestampy dla CSGOBig
-const CSGOBIG_TIMESTAMPS = {
-  current: {
-    from: 1759453200000, // 2025-10-03T01:00:00.00Z w milisekundach
-    to: 1760662800000    // 2025-10-17T01:00:00.00Z w milisekundach
-  },
-  previous: {
-    from: 1758243600000, // 2025-09-19T00:00:00.00Z w milisekundach
-    to: 1759471200000    // 2025-10-03T02:00:00.00Z w milisekundach
-  }
-};
-
-// Ścieżki do plików cache - używaj /tmp w produkcji dla Vercel
-const DATA_DIR = process.env.NODE_ENV === 'production' ? '/tmp' : path.join(process.cwd(), 'data');
-const csgobigFilePath = path.join(DATA_DIR, 'csgobig-data.json');
-const csgobigLastRequestPath = path.join(DATA_DIR, 'csgobig-last-request.json');
+// Ścieżka do pliku z danymi CSGOBig
+const csgobigFilePath = path.join(process.cwd(), 'data', 'csgobig-data.json');
+// Ścieżka do pliku śledzącego ostatnie żądanie API CSGOBig
+const csgobigLastRequestPath = path.join(process.cwd(), 'data', 'csgobig-last-request.json');
 
 // Funkcja do zapisywania danych CSGOBig do pliku
 function saveCsgobigDataToFile(data) {
   try {
     // Upewnij się, że katalog data istnieje
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
+    if (!fs.existsSync(path.join(process.cwd(), 'data'))) {
+      fs.mkdirSync(path.join(process.cwd(), 'data'), { recursive: true });
     }
 
     // Zapisz dane wraz z timestampem i formatem wersji
@@ -81,8 +69,8 @@ function loadCsgobigDataFromFile() {
 // Funkcja do zapisywania czasu ostatniego żądania API CSGOBig
 function saveLastRequestTime() {
   try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
+    if (!fs.existsSync(path.join(process.cwd(), 'data'))) {
+      fs.mkdirSync(path.join(process.cwd(), 'data'), { recursive: true });
     }
     
     fs.writeFileSync(csgobigLastRequestPath, JSON.stringify({ timestamp: Date.now() }, null, 2));
@@ -350,7 +338,7 @@ module.exports = async function handler(req, res) {
           return res.status(200).json(fileData);
         }
         
-        throw error;
+        throw error; // Re-throw jeśli nie ma danych w pliku
       }
     }
     
@@ -369,15 +357,12 @@ module.exports = async function handler(req, res) {
   } catch (e) {
     console.error(`❌ ${site} error:`, e.message);
     
+    // Fallback to old cache if available
     if (cacheEntry && cacheEntry.data) {
       console.log(`⚠️ Using old ${site} cache as fallback`);
       return res.status(200).json(cacheEntry.data);
     }
     
-    res.status(500).json({ 
-      error: "Failed", 
-      details: e.toString(),
-      results: []
-    });
+    res.status(500).json({ error: "Failed", details: e.toString() });
   }
 };
