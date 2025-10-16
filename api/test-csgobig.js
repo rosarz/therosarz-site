@@ -1,64 +1,64 @@
-// Plik pomocniczy do testowania połączenia z CSGOBig API
+// Prosty endpoint testowy dla CSGOBig - używa bezpośrednio timestampów
 
 const fetch = require('node-fetch');
 
 module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  
   try {
-    console.log('=== TEST CSGOBIG API ===');
-    
+    // Używamy dokładnie tych samych wartości jak w działającym linku
     const code = "ROSARZ8374JSDBJK384784983HDJSADBJHER";
-    const startDate = "2025-10-03T01:00:00.00Z";
-    const endDate = "2025-10-17T01:00:00.00Z";
+    const fromEpoch = 1759453200000; // 2025-10-03T01:00:00.00Z
+    const toEpoch = 1760662800000;   // 2025-10-17T01:00:00.00Z
     
-    // Konwersja dat na timestampy
-    const fromEpoch = new Date(startDate).getTime();
-    const toEpoch = new Date(endDate).getTime();
-    
-    console.log('Request parameters:', {
-      code,
-      startDate,
-      endDate,
-      fromEpoch,
-      toEpoch
-    });
-    
-    // Tworzymy URL do API CSGOBig
+    // Bezpośrednie użycie URL z timestampami
     const apiUrl = `https://csgobig.com/api/partners/getRefDetails/${code}?from=${fromEpoch}&to=${toEpoch}`;
-    console.log('CSGOBig API URL:', apiUrl);
     
-    // Wykonujemy zapytanie
+    console.log('Testing direct CSGOBig API URL:', apiUrl);
+    
+    // Wykonaj zapytanie bezpośrednio
     const response = await fetch(apiUrl);
     const status = response.status;
-    const headers = Object.fromEntries(response.headers.entries());
     
     console.log('Response status:', status);
-    console.log('Response headers:', headers);
     
-    // Pobieramy treść odpowiedzi
-    const responseText = await response.text();
-    console.log('Raw response preview:', responseText.substring(0, 200) + '...');
+    // Pobierz surową odpowiedź
+    const rawResponse = await response.text();
     
-    let data;
     try {
-      data = JSON.parse(responseText);
-      console.log('Response parsed successfully');
-      console.log('Success flag:', data.success);
-      console.log('Results count:', data.results?.length || 0);
+      // Spróbuj sparsować jako JSON
+      const data = JSON.parse(rawResponse);
+      
+      // Zwróć diagnostykę i wynik
+      return res.status(200).json({
+        success: true,
+        request: {
+          url: apiUrl,
+          fromEpoch,
+          toEpoch
+        },
+        response: {
+          status,
+          success: data.success || false,
+          results_count: data.results?.length || 0
+        },
+        data: data
+      });
     } catch (e) {
-      console.error('Failed to parse response as JSON:', e);
+      // Jeśli parsowanie nie powiodło się, zwróć surową odpowiedź
+      return res.status(200).json({
+        success: false,
+        request: { url: apiUrl },
+        response: { status },
+        raw_response: rawResponse.substring(0, 1000)
+      });
     }
-    
-    // Zwróć szczegółowe informacje diagnostyczne
-    return res.status(200).json({
-      timestamp: new Date().toISOString(),
-      test_parameters: {
-        code,
-        start_date: startDate,
-        end_date: endDate,
-        from_epoch: fromEpoch,
+  } catch (e) {
+    return res.status(500).json({
+      success: false,
+      error: e.message,
+      stack: process.env.NODE_ENV === 'production' ? null : e.stack
+    });
+  }
+};
         to_epoch: toEpoch,
         api_url: apiUrl
       },

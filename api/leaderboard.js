@@ -13,6 +13,18 @@ const CACHE_TTL = 20 * 60 * 1000; // 20 minut
 const CSGOBIG_RATE_LIMIT = 15 * 60 * 1000; // 15 minut - limit API CSGOBig
 const STALE_TTL = 60 * 60 * 1000; // 1 godzina - czas, przez który stare dane są akceptowalne
 
+// Stałe timestampy dla CSGOBIG (zamiast konwersji dat)
+const CSGOBIG_TIMESTAMPS = {
+  current: {
+    from: 1759453200000, // 2025-10-03T01:00:00.00Z w milisekundach
+    to: 1760662800000    // 2025-10-17T01:00:00.00Z w milisekundach
+  },
+  previous: {
+    from: 1758243600000, // 2025-09-19T00:00:00.00Z w milisekundach
+    to: 1759471200000    // 2025-10-03T02:00:00.00Z w milisekundach
+  }
+};
+
 // Ścieżki do plików cache
 const DATA_DIR = process.env.NODE_ENV === 'production' ? '/tmp' : path.join(process.cwd(), 'data');
 const csgobigFilePath = path.join(DATA_DIR, 'csgobig-data.json');
@@ -214,7 +226,7 @@ function formatUsers(rawUsers, platform) {
  * Główny handler dla API leaderboard
  */
 module.exports = async function handler(req, res) {
-  const { start_date, end_date, type, code, site = 'rain' } = req.query;
+  const { start_date, end_date, type, code, site = 'rain', period = 'current' } = req.query;
   
   // Konfiguracja nagłówków dla CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -286,15 +298,19 @@ module.exports = async function handler(req, res) {
       return res.status(200).json(responseData);
     }
     
-    // CSGOBig
+    // CSGOBig - uproszczone użycie bezpośrednio timestampów
     if (site === 'csgobig') {
-      // Konwersja dat na timestamp dla CSGOBig API
-      const startDate = new Date(start_date);
-      const endDate = new Date(end_date);
-      const fromEpoch = startDate.getTime();
-      const toEpoch = endDate.getTime();
+      // Użyj bezpośrednio stałych timestampów zamiast konwersji
+      const { from: fromEpoch, to: toEpoch } = CSGOBIG_TIMESTAMPS[period === 'previous' ? 'previous' : 'current'];
       
-      // Obsługa rate limitów
+      console.log('CSGOBig direct API call with timestamps:', {
+        fromEpoch,
+        toEpoch,
+        code,
+        period
+      });
+      
+      // Sprawdź limit zapytań
       if (!canMakeCSGOBigRequest()) {
         // Obsługa pobierania danych z pliku jeśli rate limit
         console.log('🕒 CSGOBig rate limit in effect. Loading data from file...');
@@ -336,13 +352,18 @@ module.exports = async function handler(req, res) {
       saveLastRequestTime();
       
       try {
+        // Bezpośrednie użycie timestampów w URL
         const apiUrl = `https://csgobig.com/api/partners/getRefDetails/${code}?from=${fromEpoch}&to=${toEpoch}`;
+        console.log('Using direct CSGOBig API URL:', apiUrl);
+        
         const response = await fetch(apiUrl);
+        console.log('CSGOBig API response status:', response.status);
         
-        // Parsowanie odpowiedzi jako tekst, następnie JSON
+        // Parsowanie odpowiedzi
         const responseText = await response.text();
-        let csgobigData;
+        console.log('CSGOBig API raw response preview:', responseText.substring(0, 100) + '...');
         
+        let csgobigData;
         try {
           csgobigData = JSON.parse(responseText);
         } catch (jsonError) {
@@ -352,7 +373,9 @@ module.exports = async function handler(req, res) {
         
         // Sprawdź czy API zwróciło success=true i ma tablicę results
         if (csgobigData.success && Array.isArray(csgobigData.results)) {
-          // Formatuj dane w jednolity sposób
+          console.log(`✅ CSGOBig API returned ${csgobigData.results.length} users`);
+          
+          // Formatuj dane
           responseData.results = formatUsers(csgobigData.results, 'csgobig');
           responseData.timestamp = Date.now();
           responseData.source = 'direct_api';
@@ -371,6 +394,7 @@ module.exports = async function handler(req, res) {
           setCacheHeaders(res, platformCache[site], site);
           return res.status(200).json(responseData);
         } else {
+          console.error('❌ Invalid CSGOBig data format:', csgobigData);
           throw new Error('Invalid data format from CSGOBig API');
         }
       } catch (error) {
@@ -420,7 +444,7 @@ module.exports = async function handler(req, res) {
       }
     }
     
-    // Rain.gg
+    // Rain.gg - domyślna opcja
     const API_KEY = process.env.RAIN_API_KEY;
     const url = `https://api.rain.gg/v1/affiliates/leaderboard?start_date=${encodeURIComponent(start_date)}&end_date=${encodeURIComponent(end_date)}&type=${encodeURIComponent(type)}&code=${encodeURIComponent(code)}`;
     

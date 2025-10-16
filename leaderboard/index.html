@@ -746,8 +746,6 @@
           defaultPrize: "500$"
         },
         csgobig: {
-          startDate: "2025-10-03T01:00:00.00Z",
-          endDate: "2025-10-17T01:00:00.00Z",
           code: "ROSARZ8374JSDBJK384784983HDJSADBJHER",
           name: "CSGOBig",
           defaultPrize: "750$"
@@ -766,9 +764,17 @@
         
         // Dodaj parametr timestamp aby uniknąć cachowania przez przeglądarkę
         const timestamp = Date.now();
-        const apiUrl = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&type=wagered&code=${config.code}&site=${siteName}&_t=${timestamp}`;
+        
+        // Dla CSGOBig nie przekazujemy dat, używamy gotowych timestampów w API
+        let apiUrl;
+        if (siteName === 'csgobig') {
+          apiUrl = `/api/leaderboard?code=${config.code}&site=${siteName}&period=current&_t=${timestamp}`;
+        } else {
+          apiUrl = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&type=wagered&code=${config.code}&site=${siteName}&_t=${timestamp}`;
+        }
         
         console.log(`🔄 Fetching ${siteName} leaderboard...`);
+        console.log('API URL:', apiUrl);
         
         const response = await fetch(apiUrl);
         
@@ -826,8 +832,6 @@
           defaultPrize: "500$"
         },
         csgobig: {
-          startDate: "2025-09-19T00:00:00.00Z",
-          endDate: "2025-10-03T02:00:00.00Z",
           code: "ROSARZ8374JSDBJK384784983HDJSADBJHER",
           name: "CSGOBig",
           defaultPrize: "500$"
@@ -844,8 +848,15 @@
           </div>
         `;
         
-        // Pobierz dane przez API
-        const url = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&type=wagered&code=${config.code}&site=${siteName}&_t=${Date.now()}`;
+        // Dla CSGOBig używamy parametru period zamiast przekazywania dat
+        let url;
+        if (siteName === 'csgobig') {
+          url = `/api/leaderboard?code=${config.code}&site=${siteName}&period=previous&_t=${Date.now()}`;
+        } else {
+          url = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&type=wagered&code=${config.code}&site=${siteName}&_t=${Date.now()}`;
+        }
+        
+        console.log('Previous leaderboard API URL:', url);
         const response = await fetch(url);
         
         if (!response.ok) {
