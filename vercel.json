@@ -13,18 +13,3 @@
     }
   }
 }
-  "crons": [
-    {
-      "path": "/api/refresh-cache?site=csgobig",
-      "schedule": "0 */3 * * *"
-    },
-    {
-      "path": "/api/refresh-cache?site=clash",
-      "schedule": "30 */6 * * *"
-    },
-    {
-      "path": "/api/refresh-cache?site=rain",
-      "schedule": "0 */4 * * *"
-    }
-  ]
-}
