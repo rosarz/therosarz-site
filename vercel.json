@@ -1,5 +1,13 @@
 {
   "version": 2,
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "routes": [
+    { "src": "/", "dest": "/index.html" },
+    { "src": "/leaderboard", "dest": "/leaderboard/index.html" },
+    { "src": "/bonuses", "dest": "/bonuses/index.html" },
+    { "src": "/youtube", "dest": "/youtube/index.html" }
+  ],
   "buildCommand": "",
   "devCommand": "",
   "installCommand": "",

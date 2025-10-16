@@ -2,11 +2,11 @@
   "name": "therosarz-site",
   "version": "1.0.0",
   "private": true,
+  "description": "therosarz website",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
-  },
+    "build": "echo 'No build step required'"
+  }
+}
   "engines": {
     "node": ">=16.0.0"
   },
