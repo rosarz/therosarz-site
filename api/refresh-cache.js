@@ -23,7 +23,7 @@ module.exports = async function handler(req, res) {
       },
       csgobig: {
         startDate: "2025-10-03T00:00:00.00Z",
-        endDate: "2025-10-17T23:59:59.99Z",
+        endDate: "2025-10-17T02:00:00.00Z",
         code: "ROSARZ8374JSDBJK384784983HDJSADBJHER",
         type: "wagered"
       }
