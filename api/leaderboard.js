@@ -1,8 +1,8 @@
 // Simple in-memory cache
 const platformCache = {
-  rain: { data: null, timestamp: null },
-  clash: { data: null, timestamp: null },
-  csgobig: { data: null, timestamp: null }
+  rain: { data: null, timestamp: null, status: 'init' },
+  clash: { data: null, timestamp: null, status: 'init' },
+  csgobig: { data: null, timestamp: null, status: 'init' }
 };
 
 const fs = require('fs');
@@ -10,6 +10,7 @@ const path = require('path');
 
 const CACHE_TTL = 20 * 60 * 1000; // 20 minut
 const CSGOBIG_RATE_LIMIT = 15 * 60 * 1000; // 15 minut - limit API CSGOBig
+const STALE_TTL = 60 * 60 * 1000; // 1 godzina - czas, przez który stare dane są akceptowalne
 
 // Używaj /tmp dla środowisk serverless, lub data dla lokalnego rozwoju
 const DATA_DIR = process.env.NODE_ENV === 'production' ? '/tmp' : path.join(process.cwd(), 'data');
@@ -37,10 +38,11 @@ function saveCsgobigDataToFile(data) {
   try {
     if (!ensureDirectoryExists()) return false;
 
-    // Zapisz dane wraz z timestampem
+    // Zapisz dane wraz z timestampem i formatem wersji
     const saveData = {
       data: data,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      version: '1.1' // Dodanie wersji dla łatwiejszej migracji danych w przyszłości
     };
     fs.writeFileSync(csgobigFilePath, JSON.stringify(saveData, null, 2));
     console.log(`✅ CSGOBig data saved to file: ${csgobigFilePath}`);
@@ -61,6 +63,13 @@ function loadCsgobigDataFromFile() {
       const maxAge = 24 * 60 * 60 * 1000; // 24 godziny
       if (fileData && fileData.timestamp && (Date.now() - fileData.timestamp) < maxAge) {
         console.log(`📂 Loaded CSGOBig data from file (age: ${Math.floor((Date.now() - fileData.timestamp) / 1000 / 60)} minutes)`);
+        
+        // Dodaj status do odczytanych danych
+        if (fileData.data && !fileData.data.status) {
+          fileData.data.status = 'from_file';
+          fileData.data.cached_at = fileData.timestamp;
+        }
+        
         return fileData.data;
       } else {
         console.log('⚠️ CSGOBig data file exists but data is too old');
@@ -114,16 +123,60 @@ function isCacheValid(cacheEntry) {
   return (Date.now() - cacheEntry.timestamp) < CACHE_TTL;
 }
 
+// Nowa funkcja - sprawdzanie czy cache jest przestarzały, ale nadal używalny
+function isCacheStale(cacheEntry) {
+  if (!cacheEntry || !cacheEntry.timestamp) return false;
+  const age = Date.now() - cacheEntry.timestamp;
+  return age >= CACHE_TTL && age < STALE_TTL;
+}
+
+// Funkcja do ustalania nagłówków cache dla odpowiedzi
+function setCacheHeaders(res, cacheEntry, site) {
+  // Ustal czas wygaśnięcia cache
+  const maxAge = CACHE_TTL / 1000; // konwersja na sekundy
+  const staleWhileRevalidate = (STALE_TTL - CACHE_TTL) / 1000; // dodatkowy czas w sekundach
+
+  // Ustaw nagłówki cache
+  res.setHeader('Cache-Control', `s-maxage=${maxAge}, stale-while-revalidate=${staleWhileRevalidate}`);
+  
+  // Dodaj ETag na podstawie timestampa dla konkretnego zasobu
+  const etag = cacheEntry?.timestamp ? `"${site}-${cacheEntry.timestamp}"` : `"${site}-${Date.now()}"`;
+  res.setHeader('ETag', etag);
+  
+  // Dodaj Last-Modified
+  res.setHeader('Last-Modified', new Date(cacheEntry?.timestamp || Date.now()).toUTCString());
+  
+  return res;
+}
+
 module.exports = async function handler(req, res) {
   const { start_date, end_date, type, code, site = 'rain' } = req.query;
   
   try {
     const cacheEntry = platformCache[site];
     
+    // Check for conditional requests
+    const ifNoneMatch = req.headers['if-none-match'];
+    const etag = cacheEntry?.timestamp ? `"${site}-${cacheEntry.timestamp}"` : null;
+    
+    if (etag && ifNoneMatch === etag && isCacheValid(cacheEntry)) {
+      console.log(`✅ 304 Not Modified for ${site}`);
+      res.status(304).end();
+      return;
+    }
+    
     // Return cached data if valid
     if (isCacheValid(cacheEntry)) {
       console.log(`✅ Cache hit for ${site} (age: ${Math.floor((Date.now() - cacheEntry.timestamp) / 1000)}s)`);
+      setCacheHeaders(res, cacheEntry, site);
       return res.status(200).json(cacheEntry.data);
+    }
+    
+    // Check if we have stale data we can use while fetching new data
+    const isStale = isCacheStale(cacheEntry);
+    if (isStale) {
+      console.log(`⚠️ Stale cache hit for ${site} (age: ${Math.floor((Date.now() - cacheEntry.timestamp) / 1000 / 60)}m)`);
+      // We'll return stale data at the end of the function if the fetch fails
     }
     
     console.log(`🔄 Fetching fresh ${site} data...`);
@@ -166,7 +219,18 @@ module.exports = async function handler(req, res) {
         const fileData = loadCsgobigDataFromFile();
         
         if (fileData) {
-          platformCache[site] = { data: fileData, timestamp: Date.now() };
+          // Dodaj metadane o źródle i czasie cache
+          fileData.source = 'file_cache';
+          fileData.cache_time = Date.now();
+          
+          // Zaktualizuj cache w pamięci
+          platformCache[site] = { 
+            data: fileData, 
+            timestamp: Date.now(),
+            status: 'from_file'
+          };
+          
+          setCacheHeaders(res, platformCache[site], site);
           return res.status(200).json(fileData);
         } else {
           console.log('❌ No file data available for CSGOBig');
@@ -179,7 +243,9 @@ module.exports = async function handler(req, res) {
             status: "rate_limited_no_file" 
           };
           
-          platformCache[site] = { data: emptyData, timestamp: Date.now() };
+          platformCache[site] = { data: emptyData, timestamp: Date.now(), status: 'error' };
+          
+          setCacheHeaders(res, platformCache[site], site);
           return res.status(200).json(emptyData);
         }
       }
@@ -198,7 +264,17 @@ module.exports = async function handler(req, res) {
           // Próbuj wczytać dane z pliku
           const fileData = loadCsgobigDataFromFile();
           if (fileData) {
-            platformCache[site] = { data: fileData, timestamp: Date.now() };
+            // Dodaj metadane o źródle i czasie cache
+            fileData.source = 'file_cache_after_rate_limit';
+            fileData.cache_time = Date.now();
+            
+            platformCache[site] = { 
+              data: fileData, 
+              timestamp: Date.now(),
+              status: 'from_file_rate_limited'
+            };
+            
+            setCacheHeaders(res, platformCache[site], site);
             return res.status(200).json(fileData);
           } else {
             console.log('❌ No file data available for CSGOBig after rate limit');
@@ -211,7 +287,9 @@ module.exports = async function handler(req, res) {
               status: "rate_limited_no_file" 
             };
             
-            platformCache[site] = { data: emptyData, timestamp: Date.now() };
+            platformCache[site] = { data: emptyData, timestamp: Date.now(), status: 'error' };
+            
+            setCacheHeaders(res, platformCache[site], site);
             return res.status(200).json(emptyData);
           }
         }
@@ -224,15 +302,25 @@ module.exports = async function handler(req, res) {
             avatar: user.img?.startsWith('http') ? user.img : `https://csgobig.com${user.img || '/assets/img/censored_avatar.png'}`
           })).sort((a, b) => b.wagered - a.wagered);
           
-          const responseData = { results, prize_pool: "750$" };
+          const responseData = { 
+            results, 
+            prize_pool: "750$",
+            fresh: true,
+            timestamp: Date.now()
+          };
           
           // Zapisz w cache
-          platformCache[site] = { data: responseData, timestamp: Date.now() };
+          platformCache[site] = { 
+            data: responseData, 
+            timestamp: Date.now(),
+            status: 'fresh'
+          };
           
           // Zapisz do pliku na dysku
           saveCsgobigDataToFile(responseData);
           
           console.log(`✅ ${site} cached (${results.length} users)`);
+          setCacheHeaders(res, platformCache[site], site);
           return res.status(200).json(responseData);
         } else {
           console.error('❌ Invalid CSGOBig data format:', csgobigData);
@@ -244,8 +332,28 @@ module.exports = async function handler(req, res) {
         // Próbuj wczytać dane z pliku w przypadku jakiegokolwiek błędu
         const fileData = loadCsgobigDataFromFile();
         if (fileData) {
-          platformCache[site] = { data: fileData, timestamp: Date.now() };
+          // Dodaj metadane o źródle i czasie cache
+          fileData.source = 'file_cache_after_error';
+          fileData.cache_time = Date.now();
+          
+          platformCache[site] = { 
+            data: fileData, 
+            timestamp: Date.now(),
+            status: 'from_file_after_error'
+          };
+          
+          setCacheHeaders(res, platformCache[site], site);
           return res.status(200).json(fileData);
+        }
+        
+        // Jeśli mamy stare dane w pamięci, użyjmy ich jako fallback
+        if (isStale) {
+          console.log(`⚠️ Using stale ${site} cache as fallback after API error`);
+          cacheEntry.data.stale = true;
+          cacheEntry.data.error = error.message;
+          
+          setCacheHeaders(res, { timestamp: cacheEntry.timestamp }, site);
+          return res.status(200).json(cacheEntry.data);
         }
         
         // Zwróć pusty leaderboard jako ostateczny fallback
@@ -253,10 +361,13 @@ module.exports = async function handler(req, res) {
           results: [], 
           prize_pool: "750$",
           timestamp: Date.now(),
-          status: "api_error_no_file" 
+          status: "api_error_no_file_no_cache",
+          error: error.message
         };
         
-        platformCache[site] = { data: emptyData, timestamp: Date.now() };
+        platformCache[site] = { data: emptyData, timestamp: Date.now(), status: 'error' };
+        
+        setCacheHeaders(res, platformCache[site], site);
         return res.status(200).json(emptyData);
       }
     }
@@ -281,6 +392,10 @@ module.exports = async function handler(req, res) {
     // Fallback to old cache if available
     if (currentCache && currentCache.data) {
       console.log(`⚠️ Using old ${site} cache as fallback`);
+      currentCache.data.stale = true;
+      currentCache.data.error = e.message;
+      
+      setCacheHeaders(res, { timestamp: currentCache.timestamp }, site);
       return res.status(200).json(currentCache.data);
     }
     
@@ -288,16 +403,31 @@ module.exports = async function handler(req, res) {
     if (site === 'csgobig') {
       const fileData = loadCsgobigDataFromFile();
       if (fileData) {
+        // Dodaj metadane o źródle i czasie cache
+        fileData.source = 'file_cache_after_global_error';
+        fileData.cache_time = Date.now();
+        fileData.error = e.message;
+        
+        platformCache[site] = { 
+          data: fileData, 
+          timestamp: Date.now(),
+          status: 'from_file_after_global_error'
+        };
+        
+        setCacheHeaders(res, platformCache[site], site);
         return res.status(200).json(fileData);
       }
     }
     
     // Ostateczny fallback - pusta odpowiedź
-    res.status(500).json({ 
+    const fallbackData = { 
       error: "Failed", 
       details: e.toString(),
       results: [],
-      prize_pool: site === 'csgobig' ? "750$" : (site === 'clash' ? "500$" : "600$")
-    });
+      prize_pool: site === 'csgobig' ? "750$" : (site === 'clash' ? "500$" : "600$"),
+      status: 'global_error'
+    };
+    
+    res.status(500).json(fallbackData);
   }
 };

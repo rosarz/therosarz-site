@@ -1,7 +1,30 @@
 {
+  "version": 2,
   "functions": {
     "api/**/*.js": {
       "maxDuration": 30
     }
-  }
+  },
+  "routes": [
+    {
+      "src": "/api/leaderboard",
+      "headers": {
+        "cache-control": "s-maxage=1200, stale-while-revalidate=3600"
+      }
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/refresh-cache?site=csgobig",
+      "schedule": "0 */3 * * *"
+    },
+    {
+      "path": "/api/refresh-cache?site=clash",
+      "schedule": "30 */6 * * *"
+    },
+    {
+      "path": "/api/refresh-cache?site=rain",
+      "schedule": "0 */4 * * *"
+    }
+  ]
 }
