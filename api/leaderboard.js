@@ -209,8 +209,22 @@ module.exports = async function handler(req, res) {
     
     // CSGOBig
     if (site === 'csgobig') {
-      const fromEpoch = new Date(start_date).getTime();
-      const toEpoch = new Date(end_date).getTime();
+      // Poprawne generowanie timestampów dla CSGOBig API
+      // Konwersja stringa daty na timestamp w milisekundach
+      const startDate = new Date(start_date);
+      const endDate = new Date(end_date);
+      const fromEpoch = startDate.getTime();
+      const toEpoch = endDate.getTime();
+      
+      console.log('CSGOBig API request details:', {
+        start_date_original: start_date,
+        end_date_original: end_date,
+        start_date_parsed: startDate.toISOString(),
+        end_date_parsed: endDate.toISOString(),
+        fromEpoch: fromEpoch,
+        toEpoch: toEpoch,
+        code: code
+      });
       
       // Sprawdź, czy możemy wykonać żądanie do API CSGOBig
       if (!canMakeCSGOBigRequest()) {
@@ -254,8 +268,31 @@ module.exports = async function handler(req, res) {
       saveLastRequestTime();
       
       try {
-        const response = await fetch(`https://csgobig.com/api/partners/getRefDetails/${code}?from=${fromEpoch}&to=${toEpoch}`);
-        const csgobigData = await response.json();
+        // Tworzenie URL z właściwymi parametrami timestamp
+        const apiUrl = `https://csgobig.com/api/partners/getRefDetails/${code}?from=${fromEpoch}&to=${toEpoch}`;
+        console.log('CSGOBig API URL:', apiUrl);
+        
+        const response = await fetch(apiUrl);
+        const responseStatus = response.status;
+        const responseHeaders = Object.fromEntries(response.headers.entries());
+        
+        // Najpierw sprawdź nagłówki i status
+        console.log('CSGOBig API response status:', responseStatus);
+        console.log('CSGOBig API response headers:', responseHeaders);
+        
+        // Pobierz treść odpowiedzi jako tekst
+        const responseText = await response.text();
+        console.log('CSGOBig API raw response:', responseText.substring(0, 300) + '...');
+        
+        let csgobigData;
+        try {
+          // Spróbuj sparsować JSON
+          csgobigData = JSON.parse(responseText);
+          console.log('CSGOBig API response parsed successfully');
+        } catch (jsonError) {
+          console.error('Failed to parse CSGOBig API response as JSON:', jsonError);
+          throw new Error('Invalid JSON response from CSGOBig API');
+        }
         
         // Sprawdź czy nie otrzymaliśmy błędu o limicie zapytań
         if (!csgobigData.success && csgobigData.error && csgobigData.error.includes('Rate limit exceeded')) {
@@ -296,6 +333,8 @@ module.exports = async function handler(req, res) {
         
         // Przetwórz dane, jeśli zapytanie się powiodło
         if (csgobigData.success && Array.isArray(csgobigData.results)) {
+          console.log(`✅ CSGOBig API returned ${csgobigData.results.length} users`);
+          
           const results = csgobigData.results.map(user => ({
             username: (user.name || '').slice(0, 2) + '*'.repeat(6),
             wagered: parseFloat(user.wagerTotal || 0),
@@ -306,7 +345,8 @@ module.exports = async function handler(req, res) {
             results, 
             prize_pool: "750$",
             fresh: true,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            source: 'direct_api'
           };
           
           // Zapisz w cache
@@ -324,7 +364,7 @@ module.exports = async function handler(req, res) {
           return res.status(200).json(responseData);
         } else {
           console.error('❌ Invalid CSGOBig data format:', csgobigData);
-          throw new Error('Invalid data format from CSGOBig API');
+          throw new Error('Invalid data format from CSGOBig API: ' + JSON.stringify(csgobigData).substring(0, 100));
         }
       } catch (error) {
         console.error(`❌ CSGOBig error:`, error.message);

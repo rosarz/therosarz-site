@@ -1019,8 +1019,9 @@
           leaderboardId: "939"
         },
         csgobig: {
-          startDate: "2025-10-03T00:00:00.00Z",
-          endDate: "2025-10-17T02:00:00.00Z",
+          // Używamy dokładnie tych dat, które działają w bezpośrednim wywołaniu API
+          startDate: "2025-10-03T01:00:00.00Z",
+          endDate: "2025-10-17T01:00:00.00Z",
           code: "ROSARZ8374JSDBJK384784983HDJSADBJHER",
           name: "CSGOBig",
           defaultPrize: "750$",
@@ -1035,13 +1036,42 @@
         
         if (config.apiType === 'csgobig') {
           // CSGOBig - ZAWSZE przez proxy API (nie plik!)
-          const apiUrl = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&type=wagered&code=${config.code}&site=csgobig`;
+          console.log(`Fetching CSGOBig data with params:`, {
+            startDate: config.startDate,
+            startTimestamp: new Date(config.startDate).getTime(),
+            endDate: config.endDate,
+            endTimestamp: new Date(config.endDate).getTime(),
+            code: config.code
+          });
+          
+          // Dodajmy unikalny identyfikator do zapytania, aby uniknąć cachowania przez przeglądarkę
+          const timestamp = new Date().getTime();
+          const apiUrl = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&type=wagered&code=${config.code}&site=csgobig&_t=${timestamp}`;
+          console.log('CSGOBig API URL:', apiUrl);
+          
           const apiResponse = await fetch(apiUrl);
+          console.log('CSGOBig API response status:', apiResponse.status);
           
           if (apiResponse.ok) {
-            data = await apiResponse.json();
-            console.log('✅ CSGOBig data loaded via API proxy');
+            const responseText = await apiResponse.text();
+            console.log('CSGOBig API raw response (first 300 chars):', responseText.substring(0, 300));
+            
+            try {
+              data = JSON.parse(responseText);
+              console.log('CSGOBig API parsed data:', data);
+              
+              if (!data.results || data.results.length === 0) {
+                console.warn('⚠️ CSGOBig data contains empty results array');
+              } else {
+                console.log(`✅ CSGOBig data loaded with ${data.results.length} users`);
+              }
+            } catch (e) {
+              console.error('Error parsing CSGOBig response JSON:', e);
+              throw new Error(`Failed to parse CSGOBig API response: ${e.message}`);
+            }
           } else {
+            const errorText = await apiResponse.text();
+            console.error('CSGOBig API error response:', errorText);
             throw new Error(`CSGOBig API proxy failed with status: ${apiResponse.status}`);
           }
         } else if (config.apiType === 'clash') {
@@ -1129,13 +1159,51 @@
         const prizePool = data.prize_pool || data.prizePool || config.defaultPrize;
         document.getElementById('leaderboard-title').textContent = `🏆 ${prizePool} Leaderboard`;
         
+        // Sprawdź czy dane są puste i wyświetl odpowiedni komunikat
+        if (!data.results || data.results.length === 0) {
+          document.getElementById("dynamic-leaderboard").innerHTML = `
+            <div class="flex flex-col items-center p-6 bg-red-900/20 rounded-lg border border-red-500/30">
+              <div class="text-red-400 font-clash-semibold mb-4">No data found for ${config.name}</div>
+              <div class="text-gray-400 text-sm text-center max-w-md">
+                The API returned an empty result set. Please try again later or contact support if this issue persists.
+              </div>
+              ${data.status ? `<div class="text-yellow-400 mt-4 text-xs">Status: ${data.status}</div>` : ''}
+              <button id="retry-btn" class="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm">
+                Retry
+              </button>
+            </div>
+          `;
+          
+          // Dodaj funkcję retry do przycisku
+          document.getElementById("retry-btn")?.addEventListener("click", () => {
+            fetchLeaderboard(siteName);
+          });
+          
+          return;
+        }
+        
         renderLeaderboard(data.results || [], "dynamic-leaderboard", false, config.name);
       } catch (e) {
         console.error(`Error fetching ${config.name} leaderboard:`, e);
-        document.getElementById("dynamic-leaderboard").innerHTML = `<div class="text-red-400 mt-4">Failed to load ${config.name} leaderboard.</div>`;
+        document.getElementById("dynamic-leaderboard").innerHTML = `
+          <div class="flex flex-col items-center p-6 bg-red-900/20 rounded-lg border border-red-500/30">
+            <div class="text-red-400 font-clash-semibold mb-4">Failed to load ${config.name} leaderboard</div>
+            <div class="text-gray-400 text-sm text-center">
+              Error: ${e.message}
+            </div>
+            <button id="retry-btn" class="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm">
+              Retry
+            </button>
+          </div>
+        `;
+        
+        // Dodaj funkcję retry do przycisku
+        document.getElementById("retry-btn")?.addEventListener("click", () => {
+          fetchLeaderboard(siteName);
+        });
       }
     }
-
+    
     async function fetchPreviousLeaderboard(siteName = 'rain') {
       // Konfiguracja tylko dla Rain.gg, Clash.gg i CSGOBig - poprzedni leaderboard
       const siteConfigs = {
