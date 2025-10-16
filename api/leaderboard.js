@@ -7,31 +7,42 @@ const platformCache = {
 
 const fs = require('fs');
 const path = require('path');
-const { formatUsers, CSGOBIG_TIMESTAMPS } = require('./utils/helpers');
 
 // Stałe czasowe dla cache
 const CACHE_TTL = 20 * 60 * 1000; // 20 minut
 const CSGOBIG_RATE_LIMIT = 15 * 60 * 1000; // 15 minut - limit API CSGOBig
 const STALE_TTL = 60 * 60 * 1000; // 1 godzina - czas, przez który stare dane są akceptowalne
 
-// Ścieżka do pliku z danymi CSGOBig
-const csgobigFilePath = path.join(process.cwd(), 'data', 'csgobig-data.json');
-// Ścieżka do pliku śledzącego ostatnie żądanie API CSGOBig
-const csgobigLastRequestPath = path.join(process.cwd(), 'data', 'csgobig-last-request.json');
+// Stałe timestampy dla CSGOBig
+const CSGOBIG_TIMESTAMPS = {
+  current: {
+    from: 1759453200000, // 2025-10-03T01:00:00.00Z w milisekundach
+    to: 1760662800000    // 2025-10-17T01:00:00.00Z w milisekundach
+  },
+  previous: {
+    from: 1758243600000, // 2025-09-19T00:00:00.00Z w milisekundach
+    to: 1759471200000    // 2025-10-03T02:00:00.00Z w milisekundach
+  }
+};
+
+// Ścieżki do plików cache - używaj /tmp w produkcji dla Vercel
+const DATA_DIR = process.env.NODE_ENV === 'production' ? '/tmp' : path.join(process.cwd(), 'data');
+const csgobigFilePath = path.join(DATA_DIR, 'csgobig-data.json');
+const csgobigLastRequestPath = path.join(DATA_DIR, 'csgobig-last-request.json');
 
 // Funkcja do zapisywania danych CSGOBig do pliku
 function saveCsgobigDataToFile(data) {
   try {
     // Upewnij się, że katalog data istnieje
-    if (!fs.existsSync(path.join(process.cwd(), 'data'))) {
-      fs.mkdirSync(path.join(process.cwd(), 'data'), { recursive: true });
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
     }
 
     // Zapisz dane wraz z timestampem i formatem wersji
     const saveData = {
       data: data,
       timestamp: Date.now(),
-      version: '1.1' // Dodanie wersji dla łatwiejszej migracji danych w przyszłości
+      version: '1.1'
     };
     fs.writeFileSync(csgobigFilePath, JSON.stringify(saveData, null, 2));
     console.log('✅ CSGOBig data saved to file');
@@ -70,8 +81,8 @@ function loadCsgobigDataFromFile() {
 // Funkcja do zapisywania czasu ostatniego żądania API CSGOBig
 function saveLastRequestTime() {
   try {
-    if (!fs.existsSync(path.join(process.cwd(), 'data'))) {
-      fs.mkdirSync(path.join(process.cwd(), 'data'), { recursive: true });
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
     }
     
     fs.writeFileSync(csgobigLastRequestPath, JSON.stringify({ timestamp: Date.now() }, null, 2));
@@ -81,14 +92,13 @@ function saveLastRequestTime() {
   }
 }
 
-// Funkcja do sprawdzania, czy możemy wywołać API CSGOBig (czy minęło 15 minut)
+// Funkcja do sprawdzania, czy możemy wywołać API CSGOBig
 function canMakeCSGOBigRequest() {
   try {
     if (fs.existsSync(csgobigLastRequestPath)) {
       const lastRequest = JSON.parse(fs.readFileSync(csgobigLastRequestPath, 'utf8'));
       const elapsed = Date.now() - lastRequest.timestamp;
       
-      // Sprawdź czy minęło wystarczająco czasu od ostatniego żądania
       if (elapsed < CSGOBIG_RATE_LIMIT) {
         console.log(`⏳ CSGOBig rate limit: ${Math.floor((CSGOBIG_RATE_LIMIT - elapsed) / 1000)} seconds remaining`);
         return false;
@@ -97,8 +107,65 @@ function canMakeCSGOBigRequest() {
     return true;
   } catch (e) {
     console.error('❌ Error checking CSGOBig rate limit:', e.message);
-    return true; // W przypadku błędu, pozwól na próbę wykonania żądania
+    return true;
   }
+}
+
+// Funkcja do formatowania użytkowników
+function formatUsers(rawUsers, platform) {
+  if (!Array.isArray(rawUsers) || rawUsers.length === 0) {
+    console.log(`❌ No users to format for ${platform}`);
+    return [];
+  }
+
+  console.log(`⚙️ Formatting ${rawUsers.length} users for ${platform}`);
+
+  return rawUsers.map((user, index) => {
+    try {
+      // Podstawowe dane
+      let username = '', wagered = 0, avatar = '../bot.png';
+      
+      // Mapowanie specyficzne dla platformy
+      if (platform === 'rain') {
+        username = user.username || `User${index}`;
+        wagered = parseFloat(user.wagered || 0);
+        avatar = user.avatar || '../bot.png';
+      } 
+      else if (platform === 'clash') {
+        username = user.username || user.name || `User${index}`;
+        wagered = parseFloat(user.wagered || 0) / 100; // Convert from gem cents to gems
+        avatar = user.avatar || user.avatarUrl || '../bot.png';
+      } 
+      else if (platform === 'csgobig') {
+        username = user.name || `User${index}`;
+        wagered = parseFloat(user.wagerTotal || 0);
+        avatar = user.img || '../bot.png';
+        
+        // Fix relative paths in CSGOBig avatars
+        if (avatar && !avatar.startsWith('http') && avatar.startsWith('/')) {
+          avatar = `https://csgobig.com${avatar}`;
+        }
+      }
+
+      // Anonimizacja nazw użytkowników
+      if (username && username.length > 2) {
+        username = username.slice(0, 2) + '*'.repeat(Math.min(6, username.length - 2));
+      }
+
+      return {
+        username,
+        wagered,
+        avatar
+      };
+    } catch (error) {
+      console.error(`❌ Error formatting user ${index}:`, error);
+      return {
+        username: `User${index}`,
+        wagered: 0,
+        avatar: '../bot.png'
+      };
+    }
+  }).filter(Boolean).sort((a, b) => b.wagered - a.wagered);
 }
 
 function isCacheValid(cacheEntry) {
@@ -106,27 +173,21 @@ function isCacheValid(cacheEntry) {
   return (Date.now() - cacheEntry.timestamp) < CACHE_TTL;
 }
 
-// Nowa funkcja - sprawdzanie czy cache jest przestarzały, ale nadal używalny
 function isCacheStale(cacheEntry) {
   if (!cacheEntry || !cacheEntry.timestamp) return false;
   const age = Date.now() - cacheEntry.timestamp;
   return age >= CACHE_TTL && age < STALE_TTL;
 }
 
-// Funkcja do ustalania nagłówków cache dla odpowiedzi
 function setCacheHeaders(res, cacheEntry, site) {
-  // Ustal czas wygaśnięcia cache
-  const maxAge = CACHE_TTL / 1000; // konwersja na sekundy
-  const staleWhileRevalidate = (STALE_TTL - CACHE_TTL) / 1000; // dodatkowy czas w sekundach
+  const maxAge = CACHE_TTL / 1000;
+  const staleWhileRevalidate = (STALE_TTL - CACHE_TTL) / 1000;
 
-  // Ustaw nagłówki cache
   res.setHeader('Cache-Control', `s-maxage=${maxAge}, stale-while-revalidate=${staleWhileRevalidate}`);
   
-  // Dodaj ETag na podstawie timestampa dla konkretnego zasobu
   const etag = cacheEntry?.timestamp ? `"${site}-${cacheEntry.timestamp}"` : `"${site}-${Date.now()}"`;
   res.setHeader('ETag', etag);
   
-  // Dodaj Last-Modified
   res.setHeader('Last-Modified', new Date(cacheEntry?.timestamp || Date.now()).toUTCString());
   
   return res;
@@ -138,11 +199,9 @@ function setCacheHeaders(res, cacheEntry, site) {
 module.exports = async function handler(req, res) {
   const { start_date, end_date, type, code, site = 'rain', period = 'current' } = req.query;
   
-  // Konfiguracja nagłówków dla CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   
-  // Handle OPTIONS request for CORS preflight
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -150,23 +209,19 @@ module.exports = async function handler(req, res) {
   try {
     const cacheEntry = platformCache[site];
     
-    // Return cached data if valid
     if (isCacheValid(cacheEntry)) {
       console.log(`✅ Cache hit for ${site} (age: ${Math.floor((Date.now() - cacheEntry.timestamp) / 1000)}s)`);
       setCacheHeaders(res, cacheEntry, site);
       return res.status(200).json(cacheEntry.data);
     }
     
-    // Check if we have stale data we can use while fetching new data
     const isStale = isCacheStale(cacheEntry);
     if (isStale) {
       console.log(`⚠️ Stale cache hit for ${site} (age: ${Math.floor((Date.now() - cacheEntry.timestamp) / 1000 / 60)}m)`);
-      // We'll return stale data at the end of the function if the fetch fails
     }
     
     console.log(`🔄 Fetching fresh ${site} data...`);
     
-    // Standardowy format odpowiedzi dla wszystkich platform
     let responseData = {
       results: [],
       prize_pool: site === 'csgobig' ? "750$" : (site === 'clash' ? "500$" : "600$"),
@@ -188,7 +243,6 @@ module.exports = async function handler(req, res) {
       let targetLeaderboard = leaderboards.find(lb => lb.id === 939) || leaderboards[0];
       const topPlayers = targetLeaderboard?.topPlayers || [];
       
-      // Formatuj dane w jednolity sposób
       responseData.results = formatUsers(topPlayers, 'clash');
       responseData.prize_pool = "500$";
       
@@ -205,7 +259,6 @@ module.exports = async function handler(req, res) {
     
     // CSGOBig - uproszczone użycie bezpośrednio timestampów
     if (site === 'csgobig') {
-      // Użyj bezpośrednio stałych timestampów zamiast konwersji
       const { from: fromEpoch, to: toEpoch } = CSGOBIG_TIMESTAMPS[period === 'previous' ? 'previous' : 'current'];
       
       console.log('CSGOBig direct API call with timestamps:', {
@@ -215,9 +268,7 @@ module.exports = async function handler(req, res) {
         period
       });
       
-      // Sprawdź limit zapytań
       if (!canMakeCSGOBigRequest()) {
-        // Obsługa pobierania danych z pliku jeśli rate limit
         console.log('🕒 CSGOBig rate limit in effect. Loading data from file...');
         const fileData = loadCsgobigDataFromFile();
         
@@ -229,19 +280,27 @@ module.exports = async function handler(req, res) {
         }
       }
       
-      // Zapisz czas żądania
       saveLastRequestTime();
       
       try {
-        // Bezpośrednie użycie timestampów w URL
         const apiUrl = `https://csgobig.com/api/partners/getRefDetails/${code}?from=${fromEpoch}&to=${toEpoch}`;
         console.log('Using direct CSGOBig API URL:', apiUrl);
         
-        // Sprawdź czy nie otrzymaliśmy błędu o limicie zapytań
+        const response = await fetch(apiUrl);
+        const responseText = await response.text();
+        
+        let csgobigData;
+        try {
+          csgobigData = JSON.parse(responseText);
+        } catch (jsonError) {
+          console.error('Failed to parse CSGOBig API response as JSON:', jsonError);
+          throw new Error('Invalid JSON response from CSGOBig API');
+        }
+        
+        // Now check for rate limit errors after we've defined csgobigData
         if (!csgobigData.success && csgobigData.error && csgobigData.error.includes('Rate limit exceeded')) {
           console.log('⚠️ CSGOBig rate limit exceeded. Trying to load from file...');
           
-          // Próbuj wczytać dane z pliku
           const fileData = loadCsgobigDataFromFile();
           if (fileData) {
             platformCache[site] = { data: fileData, timestamp: Date.now() };
@@ -251,23 +310,19 @@ module.exports = async function handler(req, res) {
           }
         }
         
-        // Sprawdź czy API zwróciło success=true i ma tablicę results
         if (csgobigData.success && Array.isArray(csgobigData.results)) {
           console.log(`✅ CSGOBig API returned ${csgobigData.results.length} users`);
           
-          // Formatuj dane
           responseData.results = formatUsers(csgobigData.results, 'csgobig');
           responseData.timestamp = Date.now();
           responseData.source = 'direct_api';
           
-          // Zapisz w cache
           platformCache[site] = { 
             data: responseData, 
             timestamp: Date.now(),
             status: 'fresh'
           };
           
-          // Zapisz kopię do pliku
           saveCsgobigDataToFile(responseData);
           
           console.log(`✅ ${site} cached (${responseData.results.length} users)`);
@@ -278,13 +333,10 @@ module.exports = async function handler(req, res) {
           throw new Error('Invalid data format from CSGOBig API');
         }
       } catch (error) {
-        // Obsługa błędów i fallbacki
         console.error(`❌ CSGOBig error:`, error.message);
         
-        // Próbuj wczytać dane z pliku w przypadku jakiegokolwiek błędu
         const fileData = loadCsgobigDataFromFile();
         if (fileData) {
-          // Dodaj metadane o źródle i czasie cache
           fileData.source = 'file_cache_after_error';
           fileData.cache_time = Date.now();
           
@@ -298,18 +350,17 @@ module.exports = async function handler(req, res) {
           return res.status(200).json(fileData);
         }
         
-        throw error; // Re-throw jeśli nie ma danych w pliku
+        throw error;
       }
     }
     
     // Rain.gg - domyślna opcja
-    const API_KEY = process.env.RAIN_API_KEY;
+    const API_KEY = process.env.RAIN_API_KEY || '';
     const url = `https://api.rain.gg/v1/affiliates/leaderboard?start_date=${encodeURIComponent(start_date)}&end_date=${encodeURIComponent(end_date)}&type=${encodeURIComponent(type)}&code=${encodeURIComponent(code)}`;
     
     const response = await fetch(url, { headers: { "x-api-key": API_KEY } });
     const data = await response.json();
     
-    // Rain.gg już zwraca dane w odpowiednim formacie
     platformCache[site] = { data, timestamp: Date.now(), status: 'fresh' };
     console.log(`✅ ${site} cached`);
     setCacheHeaders(res, platformCache[site], site);
@@ -318,12 +369,15 @@ module.exports = async function handler(req, res) {
   } catch (e) {
     console.error(`❌ ${site} error:`, e.message);
     
-    // Fallback to old cache if available
     if (cacheEntry && cacheEntry.data) {
       console.log(`⚠️ Using old ${site} cache as fallback`);
       return res.status(200).json(cacheEntry.data);
     }
     
-    res.status(500).json({ error: "Failed", details: e.toString() });
+    res.status(500).json({ 
+      error: "Failed", 
+      details: e.toString(),
+      results: []
+    });
   }
 };

@@ -7,8 +7,11 @@
  */
 function formatUsers(rawUsers, platform) {
   if (!Array.isArray(rawUsers) || rawUsers.length === 0) {
+    console.log(`❌ No users to format for ${platform}`);
     return [];
   }
+
+  console.log(`⚙️ Formatting ${rawUsers.length} users for ${platform}`);
 
   return rawUsers.map((user, index) => {
     try {
@@ -48,6 +51,7 @@ function formatUsers(rawUsers, platform) {
         avatar
       };
     } catch (error) {
+      console.error(`❌ Error formatting user ${index}:`, error);
       return {
         username: `User${index}`,
         wagered: 0,
@@ -71,10 +75,6 @@ const CSGOBIG_TIMESTAMPS = {
   }
 };
 
-module.exports = {
-  formatUsers,
-  CSGOBIG_TIMESTAMPS
-};
 module.exports = {
   formatUsers,
   CSGOBIG_TIMESTAMPS
