@@ -1,15 +1,15 @@
 {
   "version": 2,
+  "buildCommand": "",
+  "devCommand": "",
+  "installCommand": "",
+  "framework": null,
+  "outputDirectory": "",
   "crons": {
     "refresh_leaderboard": {
-      "schedule": "0 */6 * * *",
       "path": "/api/refresh-leaderboard",
+      "schedule": "0 */6 * * *",
       "enabled": false
-    }
-  },
-  "functions": {
-    "api/leaderboard.js": {
-      "maxDuration": 10
     }
   }
 }
