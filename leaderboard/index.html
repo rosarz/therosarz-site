@@ -674,77 +674,72 @@
     function transformCSGOBigData(csgobigData) {
       // Transform CSGOBig API response to match Rain.gg format
       console.log('=== CSGOBIG DATA TRANSFORMATION START ===');
-      console.log('Raw CSGOBig data structure:', csgobigData);
-      console.log('Data type:', typeof csgobigData);
-      console.log('Is array:', Array.isArray(csgobigData));
+      console.log('Raw CSGOBig data:', csgobigData);
       
       if (!csgobigData) {
         console.log('❌ No CSGOBig data received');
         return [];
       }
       
-      // Log all top-level keys to understand the structure
-      if (typeof csgobigData === 'object' && !Array.isArray(csgobigData)) {
-        console.log('📋 Top-level keys in csgobigData:', Object.keys(csgobigData));
+      // Sprawdźmy, czy dane są już w spodziewanym formacie
+      if (Array.isArray(csgobigData)) {
+        console.log('✅ Data is already an array, using directly');
+        return csgobigData;
       }
       
-      // Try different possible data structures from CSGOBig API
-      let users = csgobigData.referrals || csgobigData.users || csgobigData.data || csgobigData.results || csgobigData.leaderboard || csgobigData;
-      console.log('🔍 Users after initial extraction:', users);
-      console.log('🔍 Users type:', typeof users, 'IsArray:', Array.isArray(users));
+      // Dostęp do tablicy wyników
+      let users = [];
       
-      // If it's still an object, try to find the user array
-      if (!Array.isArray(users)) {
-        console.log('⚠️ Data is not array, exploring deeper...');
+      if (csgobigData.results && Array.isArray(csgobigData.results)) {
+        users = csgobigData.results;
+        console.log(`✅ Found ${users.length} users in csgobigData.results`);
+      } else {
+        console.log('⚠️ Could not find results array, checking other properties...');
         
-        if (typeof users === 'object' && users !== null) {
-          console.log('🔎 Available fields in users object:', Object.keys(users));
-          
-          // Try common field names for CSGOBig
-          if (users.entries) {
-            users = users.entries;
-            console.log('✅ Found entries field');
-          } else if (users.participants) {
-            users = users.participants;
-            console.log('✅ Found participants field');
-          } else if (users.players) {
-            users = users.players;
-            console.log('✅ Found players field');
-          } else if (users.items) {
-            users = users.items;
-            console.log('✅ Found items field');
-          } else if (users.referralStats) {
-            users = users.referralStats;
-            console.log('✅ Found referralStats field');
-          } else {
-            console.log('❌ Could not find user array in CSGOBig response');
-            console.log('🔍 Full object structure:', JSON.stringify(users, null, 2));
-            return [];
-          }
+        // Próbujmy znaleźć tablicę w różnych miejscach
+        const possibleArrays = Object.values(csgobigData).filter(val => Array.isArray(val) && val.length > 0);
+        
+        if (possibleArrays.length > 0) {
+          // Użyj największej tablicy jako prawdopodobnych danych użytkowników
+          users = possibleArrays.reduce((largest, current) => 
+            current.length > largest.length ? current : largest, []);
+          console.log(`✅ Found potential users array with ${users.length} elements`);
+        } else {
+          console.log('❌ Could not find any arrays in data');
+          return [];
         }
       }
       
-      if (!Array.isArray(users)) {
-        console.log('❌ Still not an array after transformation attempts');
-        console.log('Final users value:', users);
+      if (!Array.isArray(users) || users.length === 0) {
+        console.log('❌ No valid users array found');
         return [];
       }
       
-      console.log(`✅ Found ${users.length} users in CSGOBig data`);
+      console.log(`✅ Processing ${users.length} users`);
       
       const transformedUsers = users.map((user, index) => {
-        console.log(`👤 Raw user ${index + 1} data:`, user);
-        console.log(`🔑 Available user fields:`, Object.keys(user));
+        console.log(`👤 Processing user ${index + 1}:`, user);
+        
+        // Upewnij się, że mamy potrzebne pola dla każdego użytkownika
+        if (!user) {
+          console.log(`❌ Invalid user at index ${index}`);
+          return null;
+        }
         
         // Try multiple field variations for each property
-        const username = user.username || user.name || user.user || user.displayName || user.player_name || user.nick || user.handle || user.playerName || user.userId || user.steamId || `User ${index + 1}`;
+        const username = user.username || user.name || 'User' + index;
         
-        // Try multiple variations for wagered amount - CSGOBig might use different field names
-        const rawWagered = user.wagered || user.wager || user.totalWager || user.amount || user.value || user.total_wagered || user.totalAmount || user.wager_amount || user.bet_amount || user.volume || user.totalWagered || user.wagerAmount || user.totalVolume || user.deposited || user.totalDeposited || 0;
-        const wagered = parseFloat(rawWagered) / 100; // Convert from cents to dollars if needed
+        // Try multiple variations for wagered amount
+        const rawWagered = user.wagered || user.wager || user.wagerTotal || user.totalWager || 0;
+        const wagered = parseFloat(rawWagered);
         
         // Try multiple variations for avatar
-        const avatar = user.avatar || user.avatarUrl || user.profilePicture || user.profile_picture || user.image || user.profileImage || user.steamAvatar || '../bot.png';
+        let avatar = user.avatar || user.img || user.image || '../bot.png';
+        
+        // Fixing avatar URL if it's a relative path from CSGOBig
+        if (avatar && !avatar.startsWith('http') && avatar.startsWith('/')) {
+          avatar = `https://csgobig.com${avatar}`;
+        }
         
         const result = {
           username,
@@ -752,13 +747,13 @@
           avatar
         };
         
-        console.log(`✨ Transformed user ${index + 1}:`, result);
+        console.log(`✨ Transformed user ${index + 1} result:`, result);
         return result;
-      });
-      
+      }).filter(Boolean); // Usuń null values
+    
       console.log('=== CSGOBIG DATA TRANSFORMATION END ===');
       console.log(`📊 Final result: ${transformedUsers.length} transformed users`);
-      
+    
       return transformedUsers;
     }
 
@@ -1049,30 +1044,51 @@
           const apiUrl = `/api/leaderboard?start_date=${config.startDate}&end_date=${config.endDate}&type=wagered&code=${config.code}&site=csgobig&_t=${timestamp}`;
           console.log('CSGOBig API URL:', apiUrl);
           
-          const apiResponse = await fetch(apiUrl);
-          console.log('CSGOBig API response status:', apiResponse.status);
-          
-          if (apiResponse.ok) {
-            const responseText = await apiResponse.text();
-            console.log('CSGOBig API raw response (first 300 chars):', responseText.substring(0, 300));
+          try {
+            // Dodajemy więcej informacji diagnostycznych
+            console.log('🔍 Wysyłam żądanie do CSGOBig API proxy...');
             
-            try {
-              data = JSON.parse(responseText);
-              console.log('CSGOBig API parsed data:', data);
+            const apiResponse = await fetch(apiUrl);
+            console.log('CSGOBig API response status:', apiResponse.status);
+            console.log('CSGOBig API response headers:', Object.fromEntries(apiResponse.headers.entries()));
+            
+            if (apiResponse.ok) {
+              const responseText = await apiResponse.text();
+              console.log('CSGOBig API raw response (first 300 chars):', responseText.substring(0, 300));
               
-              if (!data.results || data.results.length === 0) {
-                console.warn('⚠️ CSGOBig data contains empty results array');
-              } else {
-                console.log(`✅ CSGOBig data loaded with ${data.results.length} users`);
+              try {
+                data = JSON.parse(responseText);
+                console.log('✅ CSGOBig API parsed data:', data);
+                
+                if (!data.results || data.results.length === 0) {
+                  console.warn('⚠️ CSGOBig data contains empty results array');
+                  
+                  // Wykonaj dodatkową diagnostykę
+                  console.log('Trying to test CSGOBig API directly...');
+                  
+                  // Wywołaj endpoint testowy
+                  const testResponse = await fetch('/api/test-csgobig');
+                  if (testResponse.ok) {
+                    const testData = await testResponse.json();
+                    console.log('CSGOBig test results:', testData);
+                  }
+                } else {
+                  console.log(`✅ CSGOBig data loaded with ${data.results.length} users`);
+                  // Pokaż pierwsze 3 rekordy dla weryfikacji
+                  console.log('Sample users:', data.results.slice(0, 3));
+                }
+              } catch (e) {
+                console.error('❌ Error parsing CSGOBig response JSON:', e);
+                throw new Error(`Failed to parse CSGOBig API response: ${e.message}`);
               }
-            } catch (e) {
-              console.error('Error parsing CSGOBig response JSON:', e);
-              throw new Error(`Failed to parse CSGOBig API response: ${e.message}`);
+            } else {
+              const errorText = await apiResponse.text();
+              console.error('❌ CSGOBig API error response:', errorText);
+              throw new Error(`CSGOBig API proxy failed with status: ${apiResponse.status}`);
             }
-          } else {
-            const errorText = await apiResponse.text();
-            console.error('CSGOBig API error response:', errorText);
-            throw new Error(`CSGOBig API proxy failed with status: ${apiResponse.status}`);
+          } catch (e) {
+            console.error('❌ CSGOBig fetch error:', e);
+            throw e;
           }
         } else if (config.apiType === 'clash') {
           // Clash.gg API call - use authorized endpoints
@@ -1159,17 +1175,30 @@
         const prizePool = data.prize_pool || data.prizePool || config.defaultPrize;
         document.getElementById('leaderboard-title').textContent = `🏆 ${prizePool} Leaderboard`;
         
+        // Dodajmy bardziej szczegółową diagnostykę danych przed renderowaniem
+        console.log('🔍 Data przed renderowaniem:', {
+          dataType: typeof data,
+          hasResults: Boolean(data?.results),
+          resultsLength: data?.results?.length || 0,
+          resultsType: Array.isArray(data?.results) ? 'Array' : typeof data?.results,
+          siteName
+        });
+        
         // Sprawdź czy dane są puste i wyświetl odpowiedni komunikat
-        if (!data.results || data.results.length === 0) {
+        if (!data || !data.results || !Array.isArray(data.results) || data.results.length === 0) {
           document.getElementById("dynamic-leaderboard").innerHTML = `
             <div class="flex flex-col items-center p-6 bg-red-900/20 rounded-lg border border-red-500/30">
               <div class="text-red-400 font-clash-semibold mb-4">No data found for ${config.name}</div>
               <div class="text-gray-400 text-sm text-center max-w-md">
-                The API returned an empty result set. Please try again later or contact support if this issue persists.
+                The API returned an empty result set or invalid data format.
+                <pre class="bg-gray-800 p-2 mt-2 rounded text-xs overflow-auto max-w-full">${JSON.stringify(data, null, 2).substring(0, 500)}</pre>
               </div>
-              ${data.status ? `<div class="text-yellow-400 mt-4 text-xs">Status: ${data.status}</div>` : ''}
+              ${data?.status ? `<div class="text-yellow-400 mt-4 text-xs">Status: ${data.status}</div>` : ''}
               <button id="retry-btn" class="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm">
                 Retry
+              </button>
+              <button id="test-api-btn" class="mt-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md text-xs">
+                Test API
               </button>
             </div>
           `;
@@ -1179,12 +1208,29 @@
             fetchLeaderboard(siteName);
           });
           
+          // Dodaj przycisk testu API
+          document.getElementById("test-api-btn")?.addEventListener("click", async () => {
+            try {
+              document.getElementById("test-api-btn").textContent = "Testing...";
+              const testResponse = await fetch('/api/test-csgobig');
+              const testData = await testResponse.json();
+              console.log('CSGOBig API test results:', testData);
+              alert('Test results logged to console. Check browser console (F12).');
+            } catch (e) {
+              console.error('Test API error:', e);
+              alert('Test failed: ' + e.message);
+            } finally {
+              document.getElementById("test-api-btn").textContent = "Test API";
+            }
+          });
+          
           return;
         }
         
-        renderLeaderboard(data.results || [], "dynamic-leaderboard", false, config.name);
+        // Jeśli dane są w odpowiednim formacie, wyświetl leaderboard
+        renderLeaderboard(data.results, "dynamic-leaderboard", false, config.name);
       } catch (e) {
-        console.error(`Error fetching ${config.name} leaderboard:`, e);
+        console.error(`❌ Error fetching ${config.name} leaderboard:`, e);
         document.getElementById("dynamic-leaderboard").innerHTML = `
           <div class="flex flex-col items-center p-6 bg-red-900/20 rounded-lg border border-red-500/30">
             <div class="text-red-400 font-clash-semibold mb-4">Failed to load ${config.name} leaderboard</div>
@@ -1194,12 +1240,30 @@
             <button id="retry-btn" class="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm">
               Retry
             </button>
+            <button id="test-api-btn" class="mt-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md text-xs">
+              Test API
+            </button>
           </div>
         `;
         
-        // Dodaj funkcję retry do przycisku
+        // Dodaj funkcję retry i test do przycisków
         document.getElementById("retry-btn")?.addEventListener("click", () => {
           fetchLeaderboard(siteName);
+        });
+        
+        document.getElementById("test-api-btn")?.addEventListener("click", async () => {
+          try {
+            document.getElementById("test-api-btn").textContent = "Testing...";
+            const testResponse = await fetch('/api/test-csgobig');
+            const testData = await testResponse.json();
+            console.log('CSGOBig API test results:', testData);
+            alert('Test results logged to console. Check browser console (F12).');
+          } catch (e) {
+            console.error('Test API error:', e);
+            alert('Test failed: ' + e.message);
+          } finally {
+            document.getElementById("test-api-btn").textContent = "Test API";
+          }
         });
       }
     }

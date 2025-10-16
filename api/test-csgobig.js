@@ -48,7 +48,6 @@ module.exports = async function handler(req, res) {
       console.error('Failed to parse response as JSON:', e);
     }
     
-    // Zwracamy informacje diagnostyczne
     return res.status(200).json({
       test_time: new Date().toISOString(),
       request: {
@@ -66,11 +65,7 @@ module.exports = async function handler(req, res) {
         headers,
         success: data?.success || false,
         results_count: data?.results?.length || 0,
-        first_result: data?.results?.[0] ? {
-          id: data.results[0].id,
-          name: data.results[0].name,
-          wagerTotal: data.results[0].wagerTotal
-        } : null
+        sample_results: data?.results?.slice(0, 3)
       },
       raw_preview: responseText.substring(0, 200) + '...'
     });
@@ -78,6 +73,11 @@ module.exports = async function handler(req, res) {
   } catch (e) {
     console.error('Test failed:', e);
     return res.status(500).json({
+      error: e.message,
+      stack: e.stack
+    });
+  }
+};
       error: e.message,
       stack: e.stack
     });

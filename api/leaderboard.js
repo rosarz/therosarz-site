@@ -282,13 +282,14 @@ module.exports = async function handler(req, res) {
         
         // Pobierz treść odpowiedzi jako tekst
         const responseText = await response.text();
-        console.log('CSGOBig API raw response:', responseText.substring(0, 300) + '...');
+        console.log('CSGOBig API raw response (first 300 chars):', responseText.substring(0, 300));
         
         let csgobigData;
         try {
           // Spróbuj sparsować JSON
           csgobigData = JSON.parse(responseText);
-          console.log('CSGOBig API response parsed successfully');
+          console.log('CSGOBig API response parsed successfully, success:', csgobigData.success);
+          console.log('Results count:', csgobigData.results?.length || 0);
         } catch (jsonError) {
           console.error('Failed to parse CSGOBig API response as JSON:', jsonError);
           throw new Error('Invalid JSON response from CSGOBig API');
@@ -334,12 +335,25 @@ module.exports = async function handler(req, res) {
         // Przetwórz dane, jeśli zapytanie się powiodło
         if (csgobigData.success && Array.isArray(csgobigData.results)) {
           console.log(`✅ CSGOBig API returned ${csgobigData.results.length} users`);
+          console.log('First user data:', csgobigData.results[0]);
           
-          const results = csgobigData.results.map(user => ({
-            username: (user.name || '').slice(0, 2) + '*'.repeat(6),
-            wagered: parseFloat(user.wagerTotal || 0),
-            avatar: user.img?.startsWith('http') ? user.img : `https://csgobig.com${user.img || '/assets/img/censored_avatar.png'}`
-          })).sort((a, b) => b.wagered - a.wagered);
+          const results = csgobigData.results.map(user => {
+            const username = (user.name || '').slice(0, 2) + '*'.repeat(6);
+            const wagered = parseFloat(user.wagerTotal || 0);
+            let avatar = user.img || '/assets/img/censored_avatar.png';
+            
+            if (avatar && !avatar.startsWith('http')) {
+              avatar = `https://csgobig.com${avatar}`;
+            }
+            
+            return {
+              username,
+              wagered, 
+              avatar
+            };
+          }).sort((a, b) => b.wagered - a.wagered);
+          
+          console.log(`✅ Transformed ${results.length} users`);
           
           const responseData = { 
             results, 
